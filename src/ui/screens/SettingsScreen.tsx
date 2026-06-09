@@ -60,6 +60,29 @@ export function SettingsScreen() {
               ))}
             </div>
           </div>
+
+          <div>
+            <label className="field">{t("slopeCompensation")}</label>
+            <div className="seg">
+              {(
+                [
+                  [true, t("slopeOn")],
+                  [false, t("slopeOff")],
+                ] as [boolean, string][]
+              ).map(([on, label]) => (
+                <button
+                  key={String(on)}
+                  className={settings.slopeCompensation === on ? "active" : ""}
+                  onClick={() => updateSettings({ slopeCompensation: on })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="muted" style={{ fontSize: 13, margin: "6px 0 0" }}>
+              {t("slopeHelp")}
+            </p>
+          </div>
         </div>
 
         <div className="card">

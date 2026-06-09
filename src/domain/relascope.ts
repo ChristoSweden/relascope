@@ -2,6 +2,15 @@
 //
 // All of this is pure and framework-free so it can be unit-tested and reused.
 // See PRD §2 (geometry) and §5.3 (calculations).
+//
+// Accuracy note: a phone camera is a rectilinear (pinhole) projector, so the
+// relationship between a centred on-screen width and the angle it subtends is a
+// *tangent*, not linear. Everything here uses the exact pinhole model so the
+// digital gauge matches the fixed sighting angle of a physical relascope.
+
+const DEG = Math.PI / 180;
+const toRad = (d: number) => d * DEG;
+const toDeg = (r: number) => r / DEG;
 
 /** Borderline trees are the classic error source. PRD §5.2. */
 export type BorderlinePolicy = "half" | "confirm";
@@ -15,6 +24,10 @@ export interface TreeObservation {
   dbhCm?: number;
   /** Compass bearing the phone faced when the tree was tapped, degrees 0–360. */
   bearingDeg?: number;
+  /** Line-of-sight elevation (terrain inclination) when sighted, degrees. */
+  elevationDeg?: number;
+  /** Measured horizontal distance to the tree, metres (borderline confirm). */
+  distanceM?: number;
 }
 
 /**
@@ -26,8 +39,7 @@ export interface TreeObservation {
  * BAF 2 → ≈ 3.242°, matching the PRD reference table.
  */
 export function criticalAngleDeg(baf: number): number {
-  const halfAngleRad = Math.asin(Math.sqrt(baf / 2500));
-  return (2 * halfAngleRad * 180) / Math.PI;
+  return toDeg(2 * Math.asin(Math.sqrt(baf / 2500)));
 }
 
 /**
@@ -39,43 +51,121 @@ export function distanceDiameterRatio(baf: number): number {
 }
 
 /**
- * On-screen width (in CSS pixels) of the gauge bar for a given BAF, given the
- * camera's horizontal field of view and the rendered video width.
- *
- * w_px = θ / degreesPerPixel, where degreesPerPixel = HFOV / viewportWidthPx.
+ * Limiting horizontal distance (metres) within which a tree of the given DBH
+ * counts as "in" for this BAF. Used to resolve borderline trees by measuring
+ * distance (PRD §5.2 distance confirmation) — sharper than eyeballing.
  */
-export function gaugeBarWidthPx(
-  baf: number,
-  hfovDeg: number,
-  viewportWidthPx: number,
-): number {
-  if (hfovDeg <= 0 || viewportWidthPx <= 0) return 0;
-  const degreesPerPixel = hfovDeg / viewportWidthPx;
-  return criticalAngleDeg(baf) / degreesPerPixel;
+export function limitingDistanceM(baf: number, dbhCm: number): number {
+  return (distanceDiameterRatio(baf) * dbhCm) / 100;
 }
 
 /**
- * Derive horizontal field of view from a guided calibration: a reference
- * object of known real width is held at a known distance and its on-screen
- * pixel width is marked. This is the PWA stand-in for native camera intrinsics
- * (PRD §5.1 calibration check).
+ * Focal length in pixels for a camera with horizontal field of view `hfovDeg`
+ * across a frame `frameWidthPx` wide. f = (W/2) / tan(HFOV/2).
+ */
+export function focalLengthPx(hfovDeg: number, frameWidthPx: number): number {
+  return frameWidthPx / 2 / Math.tan(toRad(hfovDeg) / 2);
+}
+
+/**
+ * Width in *frame* pixels that a centred object subtending `angleDeg` occupies,
+ * under the exact pinhole model: w = 2·f·tan(angle/2).
+ */
+export function angleToFrameWidthPx(
+  angleDeg: number,
+  hfovDeg: number,
+  frameWidthPx: number,
+): number {
+  if (hfovDeg <= 0 || frameWidthPx <= 0) return 0;
+  const f = focalLengthPx(hfovDeg, frameWidthPx);
+  return 2 * f * Math.tan(toRad(angleDeg) / 2);
+}
+
+/** Inverse of {@link angleToFrameWidthPx}: angle subtended by a centred width. */
+export function frameWidthToAngleDeg(
+  widthPx: number,
+  hfovDeg: number,
+  frameWidthPx: number,
+): number {
+  if (hfovDeg <= 0 || frameWidthPx <= 0) return 0;
+  const f = focalLengthPx(hfovDeg, frameWidthPx);
+  return toDeg(2 * Math.atan(widthPx / 2 / f));
+}
+
+/**
+ * Slope-corrected critical angle (PRD §9 slope risk). On inclined terrain the
+ * trunk is sighted along the slant distance d/cos(φ), so it appears narrower by
+ * cos(φ); narrowing the gauge threshold by the same factor restores the
+ * horizontal-distance criterion and prevents the classic slope under-count.
+ * This mirrors an automatic slope-compensating relascope.
+ */
+export function slopeCorrectedCriticalAngleDeg(
+  baf: number,
+  elevationDeg: number,
+): number {
+  return criticalAngleDeg(baf) * Math.cos(toRad(elevationDeg));
+}
+
+/**
+ * Exact on-screen (CSS) width of the gauge bar.
  *
- * Object angular width α = 2·atan((W/2)/D). The object spans
- * (objectPx / viewportWidthPx) of the frame, so HFOV = α · viewportWidthPx / objectPx.
+ * The bar must represent the critical angle on the *displayed* video. Because
+ * the preview is shown with `object-fit: cover`, the native frame is scaled by
+ * `displayScale = max(containerW/frameW, containerH/frameH)` and centre-cropped.
+ * We size the bar in native frame pixels (exact pinhole) then scale to CSS, so a
+ * calibration done at any aspect ratio transfers correctly to the sweep view.
+ */
+export function gaugeBarWidthPx(params: {
+  baf: number;
+  hfovDeg: number;
+  frameWidthPx: number;
+  displayScale: number;
+  /** Terrain inclination of the current sight line, degrees. Default 0. */
+  elevationDeg?: number;
+}): number {
+  const { baf, hfovDeg, frameWidthPx, displayScale, elevationDeg = 0 } = params;
+  const angle = slopeCorrectedCriticalAngleDeg(baf, elevationDeg);
+  const frameWidth = angleToFrameWidthPx(angle, hfovDeg, frameWidthPx);
+  return frameWidth * displayScale;
+}
+
+/**
+ * `object-fit: cover` scale factor mapping native frame pixels to CSS pixels.
+ * Returns 1 if dimensions are unknown so callers degrade gracefully.
+ */
+export function coverDisplayScale(
+  frameWidthPx: number,
+  frameHeightPx: number,
+  containerWidthPx: number,
+  containerHeightPx: number,
+): number {
+  if (frameWidthPx <= 0 || frameHeightPx <= 0) return 1;
+  return Math.max(containerWidthPx / frameWidthPx, containerHeightPx / frameHeightPx);
+}
+
+/**
+ * Recover horizontal field of view from a guided calibration: a reference
+ * object of known real width is held at a known distance and its on-screen
+ * pixel width (already converted to *native frame* pixels) is marked. This is
+ * the PWA stand-in for native camera intrinsics (PRD §5.1).
+ *
+ * Object angular width α = 2·atan((W/2)/D); focal length f = (objectPx/2)/tan(α/2);
+ * HFOV = 2·atan((frameW/2)/f). Using the exact pinhole model keeps calibration
+ * consistent with how the gauge bar is rendered.
  */
 export function hfovFromCalibration(params: {
   objectWidthM: number;
   distanceM: number;
-  objectPx: number;
-  viewportWidthPx: number;
+  objectFramePx: number;
+  frameWidthPx: number;
 }): number {
-  const { objectWidthM, distanceM, objectPx, viewportWidthPx } = params;
-  if (distanceM <= 0 || objectPx <= 0 || viewportWidthPx <= 0) {
+  const { objectWidthM, distanceM, objectFramePx, frameWidthPx } = params;
+  if (distanceM <= 0 || objectFramePx <= 0 || frameWidthPx <= 0 || objectWidthM <= 0) {
     throw new Error("Calibration inputs must be positive.");
   }
-  const angularWidthRad = 2 * Math.atan(objectWidthM / 2 / distanceM);
-  const angularWidthDeg = (angularWidthRad * 180) / Math.PI;
-  return (angularWidthDeg * viewportWidthPx) / objectPx;
+  const alphaRad = 2 * Math.atan(objectWidthM / 2 / distanceM);
+  const f = objectFramePx / 2 / Math.tan(alphaRad / 2);
+  return toDeg(2 * Math.atan(frameWidthPx / 2 / f));
 }
 
 /** Effective tree count, applying the borderline policy (PRD §5.3). */
@@ -85,8 +175,8 @@ export function effectiveCount(
 ): number {
   const inCount = trees.filter((t) => t.call === "in").length;
   const borderlineCount = trees.filter((t) => t.call === "borderline").length;
-  // Both policies count borderlines as a half-tree for the basal-area number;
-  // "confirm" only differs in that the UI prompts for a distance check first.
+  // Both policies count remaining borderlines as a half-tree for the basal-area
+  // number; "confirm" simply resolves most borderlines to in/out beforehand.
   return inCount + borderlineCount / 2;
 }
 
@@ -133,7 +223,10 @@ export function computePointMetrics(
   const basalAreaPerHa = baf * eff;
 
   const counted = trees.filter(
-    (t) => (t.call === "in" || t.call === "borderline") && typeof t.dbhCm === "number" && t.dbhCm! > 0,
+    (t) =>
+      (t.call === "in" || t.call === "borderline") &&
+      typeof t.dbhCm === "number" &&
+      t.dbhCm! > 0,
   );
 
   let stemsPerHa: number | null = null;
@@ -149,9 +242,7 @@ export function computePointMetrics(
 
     const dbhs = counted.map((t) => t.dbhCm!);
     meanDbhCm = dbhs.reduce((a, b) => a + b, 0) / dbhs.length;
-    quadraticMeanDbhCm = Math.sqrt(
-      dbhs.reduce((a, d) => a + d * d, 0) / dbhs.length,
-    );
+    quadraticMeanDbhCm = Math.sqrt(dbhs.reduce((a, d) => a + d * d, 0) / dbhs.length);
   }
 
   return {
@@ -202,9 +293,7 @@ export function aggregateStand(basalAreasPerHa: number[]): StandAggregate {
   }
   const mean = basalAreasPerHa.reduce((a, b) => a + b, 0) / n;
   const variance =
-    n > 1
-      ? basalAreasPerHa.reduce((a, g) => a + (g - mean) ** 2, 0) / (n - 1)
-      : 0;
+    n > 1 ? basalAreasPerHa.reduce((a, g) => a + (g - mean) ** 2, 0) / (n - 1) : 0;
   const stdDev = Math.sqrt(variance);
   const standardError = n > 0 ? stdDev / Math.sqrt(n) : 0;
   const cv = mean > 0 ? (stdDev / mean) * 100 : 0;

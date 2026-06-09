@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../AppContext";
 import { useCamera } from "../hooks";
-import { hfovFromCalibration } from "../../domain/relascope";
+import { coverDisplayScale, hfovFromCalibration } from "../../domain/relascope";
 import { TopBar } from "../components/TopBar";
 
 // Guided calibration (PRD §5.1): with no native camera intrinsics in a browser,
 // we recover HFOV from a reference object of known width at a known distance.
-// The user drags two markers to the object's edges; pixel span → HFOV.
+// Markers are placed on the *displayed* (cover-cropped) preview, then converted
+// back to native frame pixels so the result transfers exactly to the sweep view.
 export function CalibrationScreen() {
   const { settings, updateSettings, t } = useApp();
-  const { videoRef, start, stop, error, ready } = useCamera();
+  const { videoRef, start, stop, error, ready, frame } = useCamera();
   const stageRef = useRef<HTMLDivElement | null>(null);
 
   const [objectWidthM, setObjectWidthM] = useState("1");
@@ -46,15 +47,20 @@ export function CalibrationScreen() {
     const w = parseFloat(objectWidthM);
     const d = parseFloat(distanceM);
     const stage = stageRef.current;
-    if (!w || !d || !stage) return;
-    const stageWidth = stage.getBoundingClientRect().width;
-    const objectPx = Math.abs(right - left) * stageWidth;
+    if (!w || !d || !stage || !frame.width) return;
+    const rect = stage.getBoundingClientRect();
+    // Convert the marker span from displayed CSS px to native frame px,
+    // undoing the object-fit: cover scale, so calibration is resolution- and
+    // aspect-ratio-independent.
+    const scale = coverDisplayScale(frame.width, frame.height, rect.width, rect.height);
+    const objectCssPx = Math.abs(right - left) * rect.width;
+    const objectFramePx = objectCssPx / scale;
     try {
       const hfov = hfovFromCalibration({
         objectWidthM: w,
         distanceM: d,
-        objectPx,
-        viewportWidthPx: stageWidth,
+        objectFramePx,
+        frameWidthPx: frame.width,
       });
       updateSettings({ hfovDeg: Math.round(hfov * 10) / 10, calibrated: true });
       setSaved(true);
@@ -77,16 +83,8 @@ export function CalibrationScreen() {
           <video ref={videoRef} playsInline muted />
           {ready && (
             <>
-              <div
-                className="calib-marker"
-                style={{ left: `${left * 100}%` }}
-                onPointerDown={drag("left")}
-              />
-              <div
-                className="calib-marker"
-                style={{ left: `${right * 100}%` }}
-                onPointerDown={drag("right")}
-              />
+              <div className="calib-marker" style={{ left: `${left * 100}%` }} onPointerDown={drag("left")} />
+              <div className="calib-marker" style={{ left: `${right * 100}%` }} onPointerDown={drag("right")} />
             </>
           )}
         </div>

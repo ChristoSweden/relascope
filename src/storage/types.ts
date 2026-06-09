@@ -36,6 +36,8 @@ export interface Settings {
   calibrated: boolean;
   defaultBaf: number;
   borderlinePolicy: BorderlinePolicy;
+  /** Automatic terrain-slope compensation of the gauge angle (PRD §9). */
+  slopeCompensation: boolean;
   language: Language;
   units: Units;
 }
@@ -46,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   calibrated: false,
   defaultBaf: 2, // Nordic default (PRD §8).
   borderlinePolicy: "half",
+  slopeCompensation: true,
   language: "en",
   units: "metric",
 };
