@@ -142,6 +142,14 @@ const en: Dict = {
   volumePerHa: "Standing volume",
   volumeMethodNote:
     "Standing volume estimated as V = F·G·H with whole-stand form factor F = 0.5 and owner-entered mean height H = {h} m.",
+  heightTool: "Measure height",
+  heightHelp:
+    "Stand at a measured distance from a typical tree, hold the phone upright, and line the green line up with the trunk base, then the top.",
+  distanceToTree: "Distance to tree (m)",
+  markBase: "Mark base",
+  markTop: "Mark top",
+  treeHeight: "Tree height",
+  useAsMeanHeight: "Use as stand mean height",
 };
 
 const sv: Dict = {
@@ -281,6 +289,14 @@ const sv: Dict = {
   volumePerHa: "Stående volym",
   volumeMethodNote:
     "Stående volym uppskattad som V = F·G·H med beståndsformtal F = 0,5 och ägarens angivna medelhöjd H = {h} m.",
+  heightTool: "Mät höjd",
+  heightHelp:
+    "Ställ dig på uppmätt avstånd från ett typiskt träd, håll telefonen upprätt och rikta den gröna linjen mot stambasen, sedan mot toppen.",
+  distanceToTree: "Avstånd till trädet (m)",
+  markBase: "Markera basen",
+  markTop: "Markera toppen",
+  treeHeight: "Trädhöjd",
+  useAsMeanHeight: "Använd som beståndets medelhöjd",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };

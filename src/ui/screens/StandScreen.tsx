@@ -128,6 +128,13 @@ export function StandScreen() {
                 )}
                 <button className="btn small ghost" onClick={editMeanHeight} aria-label={t("setMeanHeight")}>
                   {stand.meanHeightM ? `${t("meanHeight")} ${stand.meanHeightM} m ✎` : `+ ${t("meanHeight")}`}
+                </button>{" "}
+                <button
+                  className="btn small ghost"
+                  onClick={() => navigate(`/stand/${stand.id}/height`)}
+                  aria-label={t("heightTool")}
+                >
+                  📐 {t("heightTool")}
                 </button>
               </span>
             </div>
