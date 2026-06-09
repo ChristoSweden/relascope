@@ -1,0 +1,209 @@
+import { describe, it, expect } from "vitest";
+import {
+  criticalAngleDeg,
+  distanceDiameterRatio,
+  limitingDistanceM,
+  focalLengthPx,
+  angleToFrameWidthPx,
+  frameWidthToAngleDeg,
+  slopeCorrectedCriticalAngleDeg,
+  gaugeBarWidthPx,
+  coverDisplayScale,
+  hfovFromCalibration,
+  effectiveCount,
+  treeBasalAreaM2,
+  computePointMetrics,
+  aggregateStand,
+  type TreeObservation,
+} from "./relascope";
+
+describe("critical angle and k-ratio (PRD §2 reference table)", () => {
+  it("matches the published critical angles", () => {
+    expect(criticalAngleDeg(1)).toBeCloseTo(2.292, 2);
+    expect(criticalAngleDeg(2)).toBeCloseTo(3.242, 2);
+    expect(criticalAngleDeg(4)).toBeCloseTo(4.585, 2);
+  });
+
+  it("matches the published distance:diameter ratios", () => {
+    expect(distanceDiameterRatio(1)).toBeCloseTo(50.0, 5);
+    expect(distanceDiameterRatio(2)).toBeCloseTo(35.36, 2);
+    expect(distanceDiameterRatio(4)).toBeCloseTo(25.0, 5);
+  });
+
+  it("derives the limiting horizontal distance for a tree", () => {
+    // BAF 2, 30cm DBH → 35.36 × 0.30 ≈ 10.6 m.
+    expect(limitingDistanceM(2, 30)).toBeCloseTo(10.61, 1);
+  });
+});
+
+describe("exact pinhole projection", () => {
+  it("computes focal length from HFOV", () => {
+    // 65° across 1920px → f = 960 / tan(32.5°) ≈ 1507px.
+    expect(focalLengthPx(65, 1920)).toBeCloseTo(1507.3, 0);
+  });
+
+  it("round-trips angle ↔ frame width", () => {
+    const w = angleToFrameWidthPx(3.242, 65, 1920);
+    expect(frameWidthToAngleDeg(w, 65, 1920)).toBeCloseTo(3.242, 4);
+  });
+
+  it("uses tan, not the linear approximation", () => {
+    // Exact: 2·f·tan(θ/2) with f from 65°/1000px.
+    const exact = angleToFrameWidthPx(criticalAngleDeg(2), 65, 1000);
+    const linear = criticalAngleDeg(2) / (65 / 1000);
+    expect(exact).toBeCloseTo(44.4, 1);
+    // They differ — the linear form is biased.
+    expect(Math.abs(exact - linear)).toBeGreaterThan(4);
+  });
+
+  it("returns 0 for invalid inputs", () => {
+    expect(angleToFrameWidthPx(3, 0, 1000)).toBe(0);
+    expect(angleToFrameWidthPx(3, 65, 0)).toBe(0);
+  });
+});
+
+describe("slope compensation", () => {
+  it("does not change the angle on flat ground", () => {
+    expect(slopeCorrectedCriticalAngleDeg(2, 0)).toBeCloseTo(criticalAngleDeg(2), 6);
+  });
+
+  it("narrows the threshold on a slope (so more trees count)", () => {
+    const flat = criticalAngleDeg(2);
+    const onSlope = slopeCorrectedCriticalAngleDeg(2, 30); // 30° up/down
+    expect(onSlope).toBeLessThan(flat);
+    expect(onSlope).toBeCloseTo(flat * Math.cos((30 * Math.PI) / 180), 6);
+  });
+
+  it("is symmetric for uphill and downhill", () => {
+    expect(slopeCorrectedCriticalAngleDeg(2, 20)).toBeCloseTo(
+      slopeCorrectedCriticalAngleDeg(2, -20),
+      6,
+    );
+  });
+});
+
+describe("gauge bar width and display scaling", () => {
+  it("scales native frame pixels to CSS via the cover factor", () => {
+    const scale = coverDisplayScale(1920, 1080, 390, 844); // phone portrait
+    const w = gaugeBarWidthPx({ baf: 2, hfovDeg: 65, frameWidthPx: 1920, displayScale: scale });
+    const expectedFrame = angleToFrameWidthPx(criticalAngleDeg(2), 65, 1920);
+    expect(w).toBeCloseTo(expectedFrame * scale, 4);
+  });
+
+  it("cover scale fills the larger dimension and degrades to 1 when unknown", () => {
+    expect(coverDisplayScale(1000, 1000, 500, 250)).toBe(0.5);
+    expect(coverDisplayScale(0, 0, 500, 250)).toBe(1);
+  });
+
+  it("narrows the bar on a slope", () => {
+    const flat = gaugeBarWidthPx({ baf: 2, hfovDeg: 65, frameWidthPx: 1920, displayScale: 1 });
+    const slope = gaugeBarWidthPx({
+      baf: 2,
+      hfovDeg: 65,
+      frameWidthPx: 1920,
+      displayScale: 1,
+      elevationDeg: 25,
+    });
+    expect(slope).toBeLessThan(flat);
+  });
+});
+
+describe("HFOV calibration (exact, display-independent)", () => {
+  it("recovers a known HFOV from a reference object", () => {
+    // Render a known 65° camera: an object 1m wide at 5m subtends
+    // α = 2·atan(0.5/5). Its frame pixel span at 1920px wide:
+    const frameWidthPx = 1920;
+    const hfovTrue = 65;
+    const alpha = 2 * Math.atan(0.5 / 5);
+    const f = focalLengthPx(hfovTrue, frameWidthPx);
+    const objectFramePx = 2 * f * Math.tan(alpha / 2);
+
+    const recovered = hfovFromCalibration({
+      objectWidthM: 1,
+      distanceM: 5,
+      objectFramePx,
+      frameWidthPx,
+    });
+    expect(recovered).toBeCloseTo(hfovTrue, 4);
+  });
+
+  it("rejects non-positive inputs", () => {
+    expect(() =>
+      hfovFromCalibration({ objectWidthM: 1, distanceM: 0, objectFramePx: 10, frameWidthPx: 100 }),
+    ).toThrow();
+  });
+});
+
+describe("effective count and basal area", () => {
+  const trees: TreeObservation[] = [
+    { call: "in" },
+    { call: "in" },
+    { call: "in" },
+    { call: "borderline" },
+    { call: "borderline" },
+    { call: "out" },
+  ];
+
+  it("counts borderlines as half", () => {
+    expect(effectiveCount(trees, "half")).toBe(4); // 3 + 2/2
+  });
+
+  it("computes G = BAF × N", () => {
+    const m = computePointMetrics(trees, 2, "half");
+    expect(m.basalAreaPerHa).toBe(8); // 2 × 4
+    expect(m.inCount).toBe(3);
+    expect(m.borderlineCount).toBe(2);
+    expect(m.outCount).toBe(1);
+  });
+
+  it("omits diameter-derived metrics when no DBH given", () => {
+    const m = computePointMetrics(trees, 2, "half");
+    expect(m.stemsPerHa).toBeNull();
+    expect(m.meanDbhCm).toBeNull();
+    expect(m.hasDiameterEstimates).toBe(false);
+  });
+});
+
+describe("tree basal area", () => {
+  it("computes π/4·d² in m²", () => {
+    expect(treeBasalAreaM2(30)).toBeCloseTo(0.0707, 4);
+  });
+});
+
+describe("stems/ha and DBH estimates", () => {
+  it("derives stems/ha from per-tree DBH", () => {
+    const trees: TreeObservation[] = [
+      { call: "in", dbhCm: 30 },
+      { call: "in", dbhCm: 30 },
+    ];
+    const m = computePointMetrics(trees, 2, "half");
+    expect(m.stemsPerHa).toBeCloseTo((2 * 2) / treeBasalAreaM2(30), 2);
+    expect(m.meanDbhCm).toBe(30);
+    expect(m.quadraticMeanDbhCm).toBeCloseTo(30, 5);
+    expect(m.hasDiameterEstimates).toBe(true);
+  });
+});
+
+describe("stand aggregation (PRD §5.4)", () => {
+  it("returns zeros for an empty stand", () => {
+    const a = aggregateStand([]);
+    expect(a.pointCount).toBe(0);
+    expect(a.meanBasalAreaPerHa).toBe(0);
+  });
+
+  it("computes mean, spread and a point recommendation", () => {
+    const a = aggregateStand([8, 10, 12, 6]);
+    expect(a.pointCount).toBe(4);
+    expect(a.meanBasalAreaPerHa).toBe(9);
+    expect(a.stdDev).toBeCloseTo(2.582, 2);
+    expect(a.standardError).toBeCloseTo(1.291, 2);
+    expect(a.coefficientOfVariationPct).toBeCloseTo(28.69, 1);
+    expect(a.suggestedAdditionalPoints).toBe(5);
+  });
+
+  it("suggests no extra points when readings are tight", () => {
+    const a = aggregateStand([10, 10, 10]);
+    expect(a.coefficientOfVariationPct).toBe(0);
+    expect(a.suggestedAdditionalPoints).toBe(0);
+  });
+});
