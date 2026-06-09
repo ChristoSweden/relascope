@@ -1,0 +1,83 @@
+import { useApp } from "../AppContext";
+import { BAF_PRESETS, type Language } from "../../storage/types";
+import type { BorderlinePolicy } from "../../domain/relascope";
+import { TopBar } from "../components/TopBar";
+
+export function SettingsScreen() {
+  const { settings, updateSettings, t } = useApp();
+
+  return (
+    <>
+      <TopBar title={t("settings")} />
+      <div className="content stack">
+        <div className="card stack">
+          <div>
+            <label className="field">{t("language")}</label>
+            <div className="seg">
+              {(["en", "sv"] as Language[]).map((lang) => (
+                <button
+                  key={lang}
+                  className={settings.language === lang ? "active" : ""}
+                  onClick={() => updateSettings({ language: lang })}
+                >
+                  {lang === "en" ? "English" : "Svenska"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="field">{t("defaultBaf")}</label>
+            <div className="seg">
+              {BAF_PRESETS.map((b) => (
+                <button
+                  key={b}
+                  className={settings.defaultBaf === b ? "active" : ""}
+                  onClick={() => updateSettings({ defaultBaf: b })}
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="field">{t("borderlinePolicy")}</label>
+            <div className="seg">
+              {(
+                [
+                  ["half", t("halfTree")],
+                  ["confirm", t("confirmDistance")],
+                ] as [BorderlinePolicy, string][]
+              ).map(([policy, label]) => (
+                <button
+                  key={policy}
+                  className={settings.borderlinePolicy === policy ? "active" : ""}
+                  onClick={() => updateSettings({ borderlinePolicy: policy })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="metric">
+            <span>{t("calibration")}</span>
+            <span className="value" style={{ fontSize: 18 }}>
+              {settings.hfovDeg}°{" "}
+              <span className={`tag ${settings.calibrated ? "measured" : "estimate"}`}>
+                {settings.calibrated ? t("calibrated") : t("estimate")}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <p className="muted" style={{ fontSize: 13, textAlign: "center" }}>
+          ✓ {t("offlineReady")}
+        </p>
+      </div>
+    </>
+  );
+}
