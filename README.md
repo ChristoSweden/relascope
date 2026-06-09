@@ -8,6 +8,10 @@ relascope, no tape, no signal required.
 
 This implements **v1 (camera-only)** of the [Digital Relascope PRD](#prd-mapping).
 
+**Live app:** <https://christosweden.github.io/relascope/> — open it on your
+phone and use “Add to Home Screen” to install. Deployed automatically from
+`main` on every push.
+
 ## Why a PWA
 
 The PRD targets every modern phone with no app-store install. A PWA delivers
