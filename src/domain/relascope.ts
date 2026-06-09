@@ -428,6 +428,25 @@ export function estimateVolumePerHa(
   return formFactor * basalAreaPerHa * meanHeightM;
 }
 
+/**
+ * Tree height by clinometer (the relascope's traditional companion tool):
+ * stand at a known horizontal distance, sight the trunk base and the top,
+ * h = d · (tan θtop − tan θbase) with angles signed relative to the horizon
+ * (base typically negative). Returns null for unusable sightings — distance
+ * ≤ 0, angles where tan blows up, or top not above base — so the UI shows
+ * "—" instead of nonsense.
+ */
+export function treeHeightM(
+  distanceM: number,
+  baseAngleDeg: number,
+  topAngleDeg: number,
+): number | null {
+  if (!(distanceM > 0)) return null;
+  if (Math.abs(baseAngleDeg) > 85 || Math.abs(topAngleDeg) > 85) return null;
+  const h = distanceM * (Math.tan(toRad(topAngleDeg)) - Math.tan(toRad(baseAngleDeg)));
+  return h > 0 ? h : null;
+}
+
 export interface StandAggregate {
   pointCount: number;
   /** Mean basal area per hectare across points, m²/ha. */

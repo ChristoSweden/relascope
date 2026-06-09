@@ -142,6 +142,7 @@ async function requestMotionPermission(): Promise<boolean> {
 export function useMotion() {
   const [heading, setHeading] = useState<number | null>(null);
   const [elevationDeg, setElevationDeg] = useState(0);
+  const [pitchDeg, setPitchDeg] = useState<number | null>(null);
   const [needsPermission, setNeedsPermission] = useState(false);
   const [active, setActive] = useState(false);
 
@@ -154,6 +155,11 @@ export function useMotion() {
       h = (360 - e.alpha) % 360; // convert CCW alpha to CW compass-style
     }
     if (h !== null) setHeading(h);
+    // Signed camera-axis pitch for the height tool: in upright portrait the
+    // W3C beta angle is 90°, so pitch above the horizon = beta − 90 (negative
+    // when sighting below). Spec-standard across platforms, unlike the sign
+    // of accelerationIncludingGravity.z.
+    if (typeof e.beta === "number") setPitchDeg(e.beta - 90);
   }, []);
 
   const onMotion = useCallback((e: DeviceMotionEvent) => {
@@ -189,7 +195,7 @@ export function useMotion() {
     };
   }, [onOrientation, onMotion]);
 
-  return { heading, elevationDeg, needsPermission, active, start };
+  return { heading, elevationDeg, pitchDeg, needsPermission, active, start };
 }
 
 /** One-shot GPS read for tagging a sample point (PRD §5.2, §5.5). */

@@ -590,6 +590,17 @@ body.sunlight .call-out {
   margin-bottom: 10px;
 }
 
+/* Horizontal sighting line for the clinometer height tool. */
+.sight-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
 /* Crash screen rendered by the top-level ErrorBoundary. */
 .error-boundary {
   min-height: 100dvh;

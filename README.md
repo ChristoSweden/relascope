@@ -35,8 +35,10 @@ frame-capture / Gaussian-splat ambitions (PRD §7) to a later native track.
   point-count recommendation based on observed variability.
 - **Species mix** — optional tall/gran/löv tagging per counted tree; basal-area
   share per species in the stand view, report and CSV.
-- **Volume estimate** — standing volume (m³/ha) from an owner-entered mean
-  height via V = F·G·H, always labelled as an estimate.
+- **Volume estimate** — standing volume (m³/ha) from a mean stand height via
+  V = F·G·H, always labelled as an estimate.
+- **Height tool** — phone clinometer (hypsometer): sight a trunk's base and top
+  from a known distance to measure tree height and feed the volume estimate.
 - **Geotagging** — each point captures GPS + heading.
 - **Offline-first** — full measurement with no connectivity; data stays on-device
   (localStorage).

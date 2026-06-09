@@ -20,6 +20,7 @@ import {
   aggregateSpecies,
   estimateVolumePerHa,
   STAND_FORM_FACTOR,
+  treeHeightM,
   type TreeObservation,
 } from "./relascope";
 
@@ -358,5 +359,26 @@ describe("volume estimate (V = F·G·H)", () => {
     expect(estimateVolumePerHa(25, undefined)).toBeNull();
     expect(estimateVolumePerHa(25, 0)).toBeNull();
     expect(estimateVolumePerHa(25, NaN)).toBeNull();
+  });
+});
+
+describe("tree height by clinometer", () => {
+  it("computes h = d·(tan top − tan base)", () => {
+    // 20 m away, base −5° (looking slightly down), top +30°.
+    const expected = 20 * (Math.tan((30 * Math.PI) / 180) - Math.tan((-5 * Math.PI) / 180));
+    expect(treeHeightM(20, -5, 30)).toBeCloseTo(expected, 10);
+    expect(expected).toBeCloseTo(13.3, 1);
+  });
+
+  it("works on a downhill tree (both angles below horizon)", () => {
+    const h = treeHeightM(20, -25, -5);
+    expect(h).not.toBeNull();
+    expect(h!).toBeGreaterThan(0);
+  });
+
+  it("returns null for unusable sightings", () => {
+    expect(treeHeightM(0, -5, 30)).toBeNull(); // no distance
+    expect(treeHeightM(20, 30, -5)).toBeNull(); // top below base
+    expect(treeHeightM(20, -5, 88)).toBeNull(); // tan blow-up guard
   });
 });
