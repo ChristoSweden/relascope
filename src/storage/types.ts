@@ -38,6 +38,12 @@ export interface Settings {
   borderlinePolicy: BorderlinePolicy;
   /** Automatic terrain-slope compensation of the gauge angle (PRD §9). */
   slopeCompensation: boolean;
+  /** High-contrast light theme for direct-sunlight field use. */
+  sunlightMode: boolean;
+  /** Implied basal-area bias from the last calibration self-check, %. */
+  lastCheckBiasPct: number | null;
+  /** ISO timestamp of the last calibration self-check. */
+  lastCheckAt: string | null;
   language: Language;
   units: Units;
 }
@@ -49,6 +55,9 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultBaf: 2, // Nordic default (PRD §8).
   borderlinePolicy: "half",
   slopeCompensation: true,
+  sunlightMode: false,
+  lastCheckBiasPct: null,
+  lastCheckAt: null,
   language: "en",
   units: "metric",
 };

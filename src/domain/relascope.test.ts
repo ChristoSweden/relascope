@@ -10,6 +10,8 @@ import {
   gaugeBarWidthPx,
   coverDisplayScale,
   hfovFromCalibration,
+  checkCalibration,
+  CALIBRATION_CHECK_TOLERANCE_PCT,
   effectiveCount,
   treeBasalAreaM2,
   computePointMetrics,
@@ -130,6 +132,86 @@ describe("HFOV calibration (exact, display-independent)", () => {
   it("rejects non-positive inputs", () => {
     expect(() =>
       hfovFromCalibration({ objectWidthM: 1, distanceM: 0, objectFramePx: 10, frameWidthPx: 100 }),
+    ).toThrow();
+  });
+});
+
+describe("calibration self-check", () => {
+  // Simulate a true camera: object 1m wide at 5m, rendered through a known HFOV.
+  const frameWidthPx = 1920;
+  const simulateMarks = (trueHfov: number) => {
+    const alpha = 2 * Math.atan(0.5 / 5);
+    const f = focalLengthPx(trueHfov, frameWidthPx);
+    return 2 * f * Math.tan(alpha / 2);
+  };
+
+  it("passes with ~0 bias when the saved HFOV matches reality", () => {
+    const res = checkCalibration({
+      objectWidthM: 1,
+      distanceM: 5,
+      markedFramePx: simulateMarks(65),
+      frameWidthPx,
+      hfovDeg: 65,
+    });
+    expect(res.angleErrorPct).toBeCloseTo(0, 4);
+    expect(res.basalAreaBiasPct).toBeCloseTo(0, 4);
+    expect(res.pass).toBe(true);
+  });
+
+  it("fails with a negative bias when the saved HFOV is too narrow", () => {
+    // True camera is 75° but the app believes 65°: the gauge bar is drawn too
+    // wide on screen, trees are under-counted, basal area under-reported.
+    const res = checkCalibration({
+      objectWidthM: 1,
+      distanceM: 5,
+      markedFramePx: simulateMarks(75),
+      frameWidthPx,
+      hfovDeg: 65,
+    });
+    expect(res.basalAreaBiasPct).toBeLessThan(-CALIBRATION_CHECK_TOLERANCE_PCT);
+    expect(res.pass).toBe(false);
+  });
+
+  it("round-trips with hfovFromCalibration to a perfect check", () => {
+    // Calibrate from marks, then verify with the same marks: bias must be 0.
+    const marks = simulateMarks(70);
+    const hfov = hfovFromCalibration({
+      objectWidthM: 1,
+      distanceM: 5,
+      objectFramePx: marks,
+      frameWidthPx,
+    });
+    const res = checkCalibration({
+      objectWidthM: 1,
+      distanceM: 5,
+      markedFramePx: marks,
+      frameWidthPx,
+      hfovDeg: hfov,
+    });
+    expect(res.basalAreaBiasPct).toBeCloseTo(0, 3);
+    expect(res.pass).toBe(true);
+  });
+
+  it("bias has the squared-ratio magnitude (BAF ∝ sin²)", () => {
+    // A 2% angular error implies ≈ 4% basal-area bias at relascope angles.
+    const marks = simulateMarks(65) * 1.02;
+    const res = checkCalibration({
+      objectWidthM: 1,
+      distanceM: 5,
+      markedFramePx: marks,
+      frameWidthPx,
+      hfovDeg: 65,
+    });
+    expect(res.angleErrorPct).toBeCloseTo(2, 1);
+    expect(res.basalAreaBiasPct).toBeCloseTo(4, 0);
+  });
+
+  it("rejects non-positive inputs", () => {
+    expect(() =>
+      checkCalibration({ objectWidthM: 1, distanceM: 5, markedFramePx: 0, frameWidthPx: 1920, hfovDeg: 65 }),
+    ).toThrow();
+    expect(() =>
+      checkCalibration({ objectWidthM: 1, distanceM: 5, markedFramePx: 100, frameWidthPx: 1920, hfovDeg: 0 }),
     ).toThrow();
   });
 });

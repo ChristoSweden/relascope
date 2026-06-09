@@ -1,15 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { useCamera } from "../hooks";
-import { coverDisplayScale, hfovFromCalibration } from "../../domain/relascope";
+import {
+  angleToFrameWidthPx,
+  checkCalibration,
+  coverDisplayScale,
+  type CalibrationCheckResult,
+} from "../../domain/relascope";
 import { TopBar } from "../components/TopBar";
 
-// Guided calibration (PRD §5.1): with no native camera intrinsics in a browser,
-// we recover HFOV from a reference object of known width at a known distance.
-// Markers are placed on the *displayed* (cover-cropped) preview, then converted
-// back to native frame pixels so the result transfers exactly to the sweep view.
-export function CalibrationScreen() {
+const DEG = Math.PI / 180;
+
+// Calibration self-check: the inverse of the guided calibration. The app
+// *predicts* where the edges of a known-width object should appear under the
+// saved HFOV and draws that as a frame; the user marks the real edges and the
+// app reports the implied basal-area bias. This is how the digital gauge proves
+// it is as trustworthy as a physical relascope before a sweep.
+export function VerifyScreen() {
   const { settings, updateSettings, t } = useApp();
   const { videoRef, start, stop, error, ready, frame } = useCamera();
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -18,13 +26,39 @@ export function CalibrationScreen() {
   const [distanceM, setDistanceM] = useState("5");
   const [left, setLeft] = useState(0.3); // fractions of stage width
   const [right, setRight] = useState(0.7);
-  const [saved, setSaved] = useState(false);
+  const [result, setResult] = useState<CalibrationCheckResult | null>(null);
+  const [stageW, setStageW] = useState(0);
+  const [stageH, setStageH] = useState(0);
 
   useEffect(() => {
     start();
     return () => stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const update = () => {
+      const rect = stage.getBoundingClientRect();
+      setStageW(rect.width);
+      setStageH(rect.height);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [ready]);
+
+  // Predicted on-screen span of the reference object under the saved HFOV.
+  const predictedCssPx = useMemo(() => {
+    const w = parseFloat(objectWidthM);
+    const d = parseFloat(distanceM);
+    if (!w || !d || w <= 0 || d <= 0 || !frame.width || !stageW) return 0;
+    const expectedAngleDeg = (2 * Math.atan(w / 2 / d)) / DEG;
+    const framePx = angleToFrameWidthPx(expectedAngleDeg, settings.hfovDeg, frame.width);
+    const scale = coverDisplayScale(frame.width, frame.height, stageW, stageH);
+    return framePx * scale;
+  }, [objectWidthM, distanceM, frame.width, frame.height, stageW, stageH, settings.hfovDeg]);
 
   const drag = (which: "left" | "right") => (e: React.PointerEvent) => {
     e.preventDefault();
@@ -44,44 +78,49 @@ export function CalibrationScreen() {
     window.addEventListener("pointerup", up);
   };
 
-  const save = () => {
+  const runCheck = () => {
     const w = parseFloat(objectWidthM);
     const d = parseFloat(distanceM);
     const stage = stageRef.current;
     if (!w || !d || !stage || !frame.width) return;
     const rect = stage.getBoundingClientRect();
-    // Convert the marker span from displayed CSS px to native frame px,
-    // undoing the object-fit: cover scale, so calibration is resolution- and
-    // aspect-ratio-independent.
     const scale = coverDisplayScale(frame.width, frame.height, rect.width, rect.height);
-    const objectCssPx = Math.abs(right - left) * rect.width;
-    const objectFramePx = objectCssPx / scale;
+    const markedFramePx = (Math.abs(right - left) * rect.width) / scale;
     try {
-      const hfov = hfovFromCalibration({
+      const res = checkCalibration({
         objectWidthM: w,
         distanceM: d,
-        objectFramePx,
+        markedFramePx,
         frameWidthPx: frame.width,
+        hfovDeg: settings.hfovDeg,
       });
-      updateSettings({ hfovDeg: Math.round(hfov * 10) / 10, calibrated: true });
-      setSaved(true);
+      setResult(res);
+      updateSettings({
+        lastCheckBiasPct: Math.round(res.basalAreaBiasPct * 10) / 10,
+        lastCheckAt: new Date().toISOString(),
+      });
     } catch {
       /* invalid inputs — ignore */
     }
   };
 
+  const biasStr = result ? Math.abs(result.basalAreaBiasPct).toFixed(1) : "";
+
   return (
     <>
-      <TopBar title={t("calibration")} />
+      <TopBar title={t("verifyCalibration")} />
       <div className="content stack">
         <p className="muted" style={{ marginTop: 0 }}>
-          {t("calibInstructions")}
+          {t("verifyInstructions")}
         </p>
 
         {error === "camera-denied" && <div className="banner warn">{t("cameraDenied")}</div>}
 
         <div className="calib-stage" ref={stageRef}>
           <video ref={videoRef} playsInline muted />
+          {ready && predictedCssPx > 0 && (
+            <div className="predicted-frame" style={{ width: `${predictedCssPx}px` }} />
+          )}
           {ready && (
             <>
               <div className="calib-marker" style={{ left: `${left * 100}%` }} onPointerDown={drag("left")} />
@@ -111,23 +150,26 @@ export function CalibrationScreen() {
           </div>
         </div>
 
-        <button className="btn primary" onClick={save}>
-          {t("save")}
+        <button className="btn primary" onClick={runCheck}>
+          {t("check")}
         </button>
 
-        {saved && (
-          <>
-            <div className="banner ok">
-              {t("calibSaved")} HFOV ≈ {settings.hfovDeg}°
+        {result && (
+          <div className={`banner ${result.pass ? "ok" : "warn"}`}>
+            {result.pass ? t("verifyPass", { pct: biasStr }) : t("verifyFail", { pct: biasStr })}
+            <div style={{ marginTop: 6, fontSize: 13 }}>
+              {t("angleError")}: {result.angleErrorPct.toFixed(1)}% · {t("baBias")}:{" "}
+              {result.basalAreaBiasPct > 0 ? "+" : ""}
+              {result.basalAreaBiasPct.toFixed(1)}%
             </div>
-            <Link to="/verify" className="btn">
-              {t("verifyCalibration")}
-            </Link>
-          </>
+          </div>
         )}
-        <p className="muted" style={{ fontSize: 14 }}>
-          {settings.calibrated ? `${t("calibrated")}: ` : ""}HFOV = {settings.hfovDeg}°
-        </p>
+
+        {result && !result.pass && (
+          <Link to="/calibrate" className="btn">
+            {t("recalibrate")}
+          </Link>
+        )}
       </div>
     </>
   );

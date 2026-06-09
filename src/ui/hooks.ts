@@ -64,6 +64,51 @@ export function useCamera() {
   return { videoRef, start, stop, error, ready, frame };
 }
 
+// Screen Wake Lock API surface (not yet in all TS DOM libs).
+interface WakeLockSentinelLike {
+  release: () => Promise<void>;
+}
+interface WakeLockNavigator {
+  wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinelLike> };
+}
+
+/**
+ * Keep the screen awake while `active` (field hardening): a sweep can take a
+ * couple of minutes of looking through the camera without touching the screen,
+ * and a phone sleeping mid-sweep loses the count. Re-acquires the lock when the
+ * page becomes visible again (the OS silently releases it on background).
+ */
+export function useWakeLock(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const nav = navigator as Navigator & WakeLockNavigator;
+    if (!nav.wakeLock) return;
+    let sentinel: WakeLockSentinelLike | null = null;
+    let cancelled = false;
+
+    const acquire = async () => {
+      try {
+        const s = await nav.wakeLock!.request("screen");
+        if (cancelled) await s.release().catch(() => undefined);
+        else sentinel = s;
+      } catch {
+        /* low battery or unsupported — the sweep still works */
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") acquire();
+    };
+
+    acquire();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
+      sentinel?.release().catch(() => undefined);
+    };
+  }, [active]);
+}
+
 /** True when iOS-style explicit motion-sensor permission is required. */
 function motionNeedsPermission(): boolean {
   const anyEvt = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };

@@ -35,6 +35,21 @@ frame-capture / Gaussian-splat ambitions (PRD §7) to a later native track.
 - **CSV export** — raw points + computed metrics for a forester/buyer hand-off.
 - **EN + SV**, metric units, Nordic BAF 2 default.
 
+## Features (v1.1 — trust & hand-off)
+
+- **Calibration self-check** — the app *proves* its gauge: it predicts where a
+  known-width object's edges should appear under the saved calibration, you mark
+  the real edges, and it reports the implied basal-area bias (pass ≤ ±5%). See
+  `checkCalibration` in `domain/relascope.ts`.
+- **Stand report (PDF)** — a one-page, print-styled summary (mean basal area
+  ± SE, per-point table, method & calibration provenance) via the browser's
+  print-to-PDF. Works offline, zero dependencies.
+- **Screen wake lock** — the display stays on during a sweep.
+- **Sunlight mode** — high-contrast light theme for direct sun.
+- **Field validation protocol** — [docs/FIELD_VALIDATION.md](docs/FIELD_VALIDATION.md)
+  defines the side-by-side comparison against a physical gauge and its
+  acceptance criteria.
+
 ## Getting started
 
 ```bash
@@ -76,5 +91,4 @@ The math in `src/domain/relascope.ts` is framework-free and fully covered by
 
 - Opt-in frame-bundle capture + ARKit/ARCore poses and Gaussian splats (PRD §7) —
   needs native capabilities a browser can't provide.
-- One-page PDF stand summary (CSV ships first).
 - ML auto-detection and LiDAR diameter measurement (PRD v2).

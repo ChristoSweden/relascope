@@ -1,10 +1,35 @@
+import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { BAF_PRESETS, type Language } from "../../storage/types";
 import type { BorderlinePolicy } from "../../domain/relascope";
+import { backupToJson, parseBackup } from "../../storage/backup";
+import { downloadText } from "../../storage/export";
 import { TopBar } from "../components/TopBar";
 
 export function SettingsScreen() {
-  const { settings, updateSettings, t } = useApp();
+  const { stands, settings, updateSettings, restoreAll, t } = useApp();
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [restoreMsg, setRestoreMsg] = useState<"done" | "invalid" | null>(null);
+
+  const exportBackup = () => {
+    const date = new Date().toISOString().slice(0, 10);
+    downloadText(`relascope-backup-${date}.json`, backupToJson(stands, settings), "application/json");
+  };
+
+  const onRestoreFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const { stands: nextStands, settings: nextSettings } = parseBackup(await file.text());
+      if (!confirm(t("restoreConfirm"))) return;
+      restoreAll(nextStands, nextSettings);
+      setRestoreMsg("done");
+    } catch {
+      setRestoreMsg("invalid");
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   return (
     <>
@@ -83,9 +108,32 @@ export function SettingsScreen() {
               {t("slopeHelp")}
             </p>
           </div>
+
+          <div>
+            <label className="field">{t("sunlightMode")}</label>
+            <div className="seg">
+              {(
+                [
+                  [true, t("slopeOn")],
+                  [false, t("slopeOff")],
+                ] as [boolean, string][]
+              ).map(([on, label]) => (
+                <button
+                  key={String(on)}
+                  className={settings.sunlightMode === on ? "active" : ""}
+                  onClick={() => updateSettings({ sunlightMode: on })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="muted" style={{ fontSize: 13, margin: "6px 0 0" }}>
+              {t("sunlightHelp")}
+            </p>
+          </div>
         </div>
 
-        <div className="card">
+        <div className="card stack">
           <div className="metric">
             <span>{t("calibration")}</span>
             <span className="value" style={{ fontSize: 18 }}>
@@ -95,6 +143,40 @@ export function SettingsScreen() {
               </span>
             </span>
           </div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            {settings.lastCheckAt
+              ? `${t("lastVerified")}: ${new Date(settings.lastCheckAt).toLocaleDateString()} · ${t("baBias")} ${
+                  settings.lastCheckBiasPct ?? 0
+                }%`
+              : t("neverVerified")}
+          </p>
+          <Link to="/verify" className="btn ghost">
+            {t("verifyCalibration")}
+          </Link>
+        </div>
+
+        <div className="card stack">
+          <label className="field" style={{ marginBottom: 0 }}>
+            {t("backup")}
+          </label>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            {t("backupHelp")}
+          </p>
+          <button className="btn" onClick={exportBackup}>
+            {t("exportBackup")}
+          </button>
+          <button className="btn ghost" onClick={() => fileRef.current?.click()}>
+            {t("restoreBackup")}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={(e) => onRestoreFile(e.target.files?.[0])}
+          />
+          {restoreMsg === "done" && <div className="banner ok">{t("restoreDone")}</div>}
+          {restoreMsg === "invalid" && <div className="banner warn">{t("restoreInvalid")}</div>}
         </div>
 
         <p className="muted" style={{ fontSize: 13, textAlign: "center" }}>
