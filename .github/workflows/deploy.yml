@@ -40,8 +40,12 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Not named "github-pages": that auto-created environment is locked to the
+    # branch that first deployed it, which blocks main. deploy-pages publishes
+    # via the Pages API regardless of the environment name, and this one has
+    # no branch restrictions.
     environment:
-      name: github-pages
+      name: pages-production
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
