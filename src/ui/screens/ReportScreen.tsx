@@ -2,7 +2,14 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { getStand } from "../../storage/store";
-import { aggregateStand, computePointMetrics } from "../../domain/relascope";
+import {
+  aggregateStand,
+  aggregateSpecies,
+  computePointMetrics,
+  estimateVolumePerHa,
+  TREE_SPECIES,
+} from "../../domain/relascope";
+import { speciesKey } from "../../i18n/strings";
 
 // One-page stand report (PRD §5.5 follow-up): a print-styled summary the owner
 // can hand to a forester or timber buyer. Uses the browser's print-to-PDF so it
@@ -31,6 +38,8 @@ export function ReportScreen() {
 
   const metrics = stand.points.map((p) => computePointMetrics(p.trees, p.baf, p.borderlinePolicy));
   const agg = aggregateStand(metrics.map((m) => m.basalAreaPerHa));
+  const species = aggregateSpecies(stand.points);
+  const volume = estimateVolumePerHa(agg.meanBasalAreaPerHa, stand.meanHeightM);
   const locale = settings.language === "sv" ? "sv-SE" : "en-GB";
   const fmtDate = (iso: string) => new Date(iso).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 
@@ -86,6 +95,29 @@ export function ReportScreen() {
               <th>{t("pointsUsed")}</th>
               <td>{agg.pointCount}</td>
             </tr>
+            {species.hasSpecies && (
+              <tr>
+                <th>{t("speciesShare")}</th>
+                <td>
+                  {TREE_SPECIES.filter((s) => species.sharePct[s] > 0)
+                    .map((s) => `${t(speciesKey(s))} ${Math.round(species.sharePct[s])}%`)
+                    .join(" · ")}
+                  {species.unspecifiedSharePct >= 0.5
+                    ? ` · ${t("speciesUnspecified")} ${Math.round(species.unspecifiedSharePct)}%`
+                    : ""}
+                </td>
+              </tr>
+            )}
+            {volume !== null && (
+              <tr>
+                <th>
+                  {t("volumePerHa")} ({t("meanHeight").toLowerCase()} {stand.meanHeightM} m)
+                </th>
+                <td>
+                  {Math.round(volume)} m³/ha ({t("estimate")})
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </section>
@@ -135,7 +167,10 @@ export function ReportScreen() {
 
       <section>
         <h2>{t("method")}</h2>
-        <p className="report-method">{methodNote}</p>
+        <p className="report-method">
+          {methodNote}
+          {volume !== null ? ` ${t("volumeMethodNote", { h: stand.meanHeightM! })}` : ""}
+        </p>
       </section>
     </div>
   );

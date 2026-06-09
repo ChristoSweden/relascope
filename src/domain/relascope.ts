@@ -18,8 +18,19 @@ export type BorderlinePolicy = "half" | "confirm";
 /** A single tree call during a sweep. */
 export type TreeCall = "in" | "borderline" | "out";
 
+/**
+ * Species groups used in Nordic practice (tall/gran/löv). The basal-area share
+ * per species is the first thing a buyer asks about a stand, so the sweep can
+ * optionally tag each counted tree with one of these.
+ */
+export type TreeSpecies = "pine" | "spruce" | "deciduous";
+
+export const TREE_SPECIES: readonly TreeSpecies[] = ["pine", "spruce", "deciduous"];
+
 export interface TreeObservation {
   call: TreeCall;
+  /** Optional species group of the tree (PRD hand-off: buyer asks for mix). */
+  species?: TreeSpecies;
   /** Optional measured/estimated diameter at breast height, in centimetres. */
   dbhCm?: number;
   /** Compass bearing the phone faced when the tree was tapped, degrees 0–360. */
@@ -321,6 +332,100 @@ export function computePointMetrics(
     quadraticMeanDbhCm,
     hasDiameterEstimates: counted.length > 0,
   };
+}
+
+export interface SpeciesBreakdown {
+  /** Effective count (in + ½·borderline) per species among counted trees. */
+  effectiveCounts: Record<TreeSpecies, number>;
+  /** Effective count of counted trees with no species recorded. */
+  unspecified: number;
+  /** True when at least one counted tree carries a species tag. */
+  hasSpecies: boolean;
+}
+
+/**
+ * Per-species effective counts for one sweep. In an angle count every counted
+ * tree represents the same basal area (the BAF), so the species share of the
+ * effective count IS the species share of basal area — no diameters needed.
+ */
+export function speciesBreakdown(trees: TreeObservation[]): SpeciesBreakdown {
+  const effectiveCounts: Record<TreeSpecies, number> = { pine: 0, spruce: 0, deciduous: 0 };
+  let unspecified = 0;
+  for (const tree of trees) {
+    const weight = tree.call === "in" ? 1 : tree.call === "borderline" ? 0.5 : 0;
+    if (weight === 0) continue;
+    if (tree.species) effectiveCounts[tree.species] += weight;
+    else unspecified += weight;
+  }
+  return {
+    effectiveCounts,
+    unspecified,
+    hasSpecies: TREE_SPECIES.some((s) => effectiveCounts[s] > 0),
+  };
+}
+
+export interface SpeciesShares {
+  /** Mean basal area per hectare attributable to each species, m²/ha. */
+  basalAreaPerHa: Record<TreeSpecies, number>;
+  /** Mean basal area per hectare from counted trees without a species, m²/ha. */
+  unspecifiedBasalAreaPerHa: number;
+  /** Share of total basal area per species, %. Sums to 100 with unspecified. */
+  sharePct: Record<TreeSpecies, number>;
+  unspecifiedSharePct: number;
+  hasSpecies: boolean;
+}
+
+/**
+ * Stand-level species mix: average the per-point species basal areas
+ * (BAF × effective count per species) the same way `aggregateStand` averages
+ * totals, then express each species as a share of the total.
+ */
+export function aggregateSpecies(
+  points: { trees: TreeObservation[]; baf: number }[],
+): SpeciesShares {
+  const basalAreaPerHa: Record<TreeSpecies, number> = { pine: 0, spruce: 0, deciduous: 0 };
+  let unspecifiedBasalAreaPerHa = 0;
+  const n = points.length;
+  for (const point of points) {
+    const b = speciesBreakdown(point.trees);
+    for (const s of TREE_SPECIES) basalAreaPerHa[s] += (point.baf * b.effectiveCounts[s]) / n;
+    unspecifiedBasalAreaPerHa += (point.baf * b.unspecified) / n;
+  }
+  const total =
+    TREE_SPECIES.reduce((sum, s) => sum + basalAreaPerHa[s], 0) + unspecifiedBasalAreaPerHa;
+  const sharePct: Record<TreeSpecies, number> = { pine: 0, spruce: 0, deciduous: 0 };
+  if (total > 0) {
+    for (const s of TREE_SPECIES) sharePct[s] = (basalAreaPerHa[s] / total) * 100;
+  }
+  return {
+    basalAreaPerHa,
+    unspecifiedBasalAreaPerHa,
+    sharePct,
+    unspecifiedSharePct: total > 0 ? (unspecifiedBasalAreaPerHa / total) * 100 : 0,
+    hasSpecies: TREE_SPECIES.some((s) => basalAreaPerHa[s] > 0),
+  };
+}
+
+/**
+ * Whole-stand form factor for the classic relascope volume shortcut
+ * V ≈ F · G · H. ~0.5 is the standard rough figure for Nordic
+ * conifer-dominated stands (pine ≈ 0.45, spruce ≈ 0.48–0.52); the result is
+ * always labelled an estimate in the UI.
+ */
+export const STAND_FORM_FACTOR = 0.5;
+
+/**
+ * Standing-volume estimate, m³/ha, from basal area and a mean stand height
+ * (the unit forest owners actually reason in). Returns null when height is
+ * missing/invalid so callers render "—" rather than a fake zero.
+ */
+export function estimateVolumePerHa(
+  basalAreaPerHa: number,
+  meanHeightM: number | null | undefined,
+  formFactor: number = STAND_FORM_FACTOR,
+): number | null {
+  if (meanHeightM == null || !(meanHeightM > 0) || basalAreaPerHa < 0) return null;
+  return formFactor * basalAreaPerHa * meanHeightM;
 }
 
 export interface StandAggregate {

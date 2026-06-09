@@ -23,6 +23,11 @@ export interface Stand {
   name: string;
   createdAt: string;
   points: SamplePoint[];
+  /**
+   * Optional mean stand height in metres, entered by the owner. Enables the
+   * V ≈ F·G·H standing-volume estimate. Absent on stands from older versions.
+   */
+  meanHeightM?: number | null;
 }
 
 export type Units = "metric"; // v1 is metric-only (PRD §8).

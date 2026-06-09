@@ -1,4 +1,8 @@
-import { computePointMetrics } from "../domain/relascope";
+import {
+  computePointMetrics,
+  estimateVolumePerHa,
+  speciesBreakdown,
+} from "../domain/relascope";
 import type { Stand } from "./types";
 
 // CSV export of raw points + computed metrics (PRD §5.5). A one-page PDF
@@ -26,14 +30,21 @@ export function standToCsv(stand: Stand): string {
     "out_count",
     "effective_count",
     "basal_area_per_ha_m2",
+    "pine_eff_count",
+    "spruce_eff_count",
+    "deciduous_eff_count",
+    "unspecified_eff_count",
     "stems_per_ha_estimate",
     "mean_dbh_cm_estimate",
     "quadratic_mean_dbh_cm_estimate",
+    "volume_per_ha_m3_estimate",
     "notes",
   ];
 
   const rows = stand.points.map((p) => {
     const m = computePointMetrics(p.trees, p.baf, p.borderlinePolicy);
+    const sp = speciesBreakdown(p.trees);
+    const vol = estimateVolumePerHa(m.basalAreaPerHa, stand.meanHeightM);
     return [
       stand.name,
       p.id,
@@ -49,9 +60,14 @@ export function standToCsv(stand: Stand): string {
       m.outCount,
       m.effectiveCount,
       round(m.basalAreaPerHa, 2),
+      sp.effectiveCounts.pine,
+      sp.effectiveCounts.spruce,
+      sp.effectiveCounts.deciduous,
+      sp.unspecified,
       m.stemsPerHa === null ? null : round(m.stemsPerHa, 0),
       m.meanDbhCm === null ? null : round(m.meanDbhCm, 1),
       m.quadraticMeanDbhCm === null ? null : round(m.quadraticMeanDbhCm, 1),
+      vol === null ? null : round(vol, 0),
       p.notes,
     ]
       .map(csvCell)
