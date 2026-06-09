@@ -17,6 +17,8 @@ interface AppState {
   upsertStand: (stand: Stand) => void;
   deleteStand: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
+  /** Replace all on-device data at once (backup restore). */
+  restoreAll: (stands: Stand[], settings: Settings) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
@@ -53,14 +55,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  const restoreAll = useCallback((nextStands: Stand[], nextSettings: Settings) => {
+    setStands(nextStands);
+    setSettings(nextSettings);
+  }, []);
+
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>) => translate(settings.language, key, vars),
     [settings.language],
   );
 
   const value = useMemo<AppState>(
-    () => ({ stands, settings, upsertStand, deleteStand, updateSettings, t }),
-    [stands, settings, upsertStand, deleteStand, updateSettings, t],
+    () => ({ stands, settings, upsertStand, deleteStand, updateSettings, restoreAll, t }),
+    [stands, settings, upsertStand, deleteStand, updateSettings, restoreAll, t],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

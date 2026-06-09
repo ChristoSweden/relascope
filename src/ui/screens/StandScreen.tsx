@@ -42,6 +42,17 @@ export function StandScreen() {
     if (name && name.trim()) upsertStand({ ...stand, name: name.trim() });
   };
 
+  const editNotes = (pointId: string) => {
+    const point = stand.points.find((p) => p.id === pointId);
+    if (!point) return;
+    const notes = prompt(t("notesPlaceholder"), point.notes);
+    if (notes === null) return;
+    upsertStand({
+      ...stand,
+      points: stand.points.map((p) => (p.id === pointId ? { ...p, notes: notes.trim() } : p)),
+    });
+  };
+
   return (
     <>
       <TopBar
@@ -98,9 +109,18 @@ export function StandScreen() {
                   <strong>
                     #{i + 1} · {t("baf")} {p.baf}
                   </strong>
-                  <button className="btn small danger" onClick={() => removePoint(p.id)}>
-                    {t("delete")}
-                  </button>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button
+                      className="btn small ghost"
+                      onClick={() => editNotes(p.id)}
+                      aria-label={t("editNotes")}
+                    >
+                      ✎
+                    </button>
+                    <button className="btn small danger" onClick={() => removePoint(p.id)}>
+                      {t("delete")}
+                    </button>
+                  </div>
                 </div>
                 <div className="metric">
                   <span>

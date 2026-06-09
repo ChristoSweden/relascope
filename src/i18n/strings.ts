@@ -117,6 +117,15 @@ const en: Dict = {
   countsCol: "IN / BORD / OUT",
   pointsUsed: "Sample points",
   notesCol: "Notes",
+  backup: "Backup",
+  backupHelp:
+    "Your measurements live only on this phone. Export a backup file now and then and keep it somewhere safe (email it to yourself, for example).",
+  exportBackup: "Export backup file",
+  restoreBackup: "Restore from backup",
+  restoreConfirm: "Replace all data on this device with the backup?",
+  restoreDone: "Backup restored.",
+  restoreInvalid: "That file is not a valid backup.",
+  editNotes: "Edit notes",
 };
 
 const sv: Dict = {
@@ -231,6 +240,15 @@ const sv: Dict = {
   countsCol: "IN / GRÄNS / UT",
   pointsUsed: "Provpunkter",
   notesCol: "Anteckningar",
+  backup: "Säkerhetskopia",
+  backupHelp:
+    "Dina mätningar finns bara på den här telefonen. Exportera en säkerhetskopiefil då och då och förvara den säkert (mejla den till dig själv, till exempel).",
+  exportBackup: "Exportera säkerhetskopia",
+  restoreBackup: "Återställ från säkerhetskopia",
+  restoreConfirm: "Ersätt alla data på den här enheten med säkerhetskopian?",
+  restoreDone: "Säkerhetskopian återställd.",
+  restoreInvalid: "Filen är inte en giltig säkerhetskopia.",
+  editNotes: "Redigera anteckningar",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };
