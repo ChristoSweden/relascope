@@ -35,6 +35,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => saveStands(stands), [stands]);
   useEffect(() => saveSettings(settings), [settings]);
+  // Sunlight mode flips the whole theme to a high-contrast light palette, so it
+  // lives on <body> rather than inside the React tree.
+  useEffect(() => {
+    document.body.classList.toggle("sunlight", settings.sunlightMode);
+  }, [settings.sunlightMode]);
 
   const upsertStand = useCallback((stand: Stand) => {
     setStands((prev) => upsertStandFn(prev, stand));

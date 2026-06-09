@@ -168,6 +168,71 @@ export function hfovFromCalibration(params: {
   return toDeg(2 * Math.atan(frameWidthPx / 2 / f));
 }
 
+/**
+ * Verification tolerance: the implied basal-area bias above which a
+ * calibration check fails and the user is told to recalibrate. 5% keeps the
+ * digital gauge within the agreement typically expected of a physical
+ * relascope sweep.
+ */
+export const CALIBRATION_CHECK_TOLERANCE_PCT = 5;
+
+export interface CalibrationCheckResult {
+  /** True angle the reference object subtends, from its width and distance. */
+  expectedAngleDeg: number;
+  /** Angle the app derives from the marked pixel span under the saved HFOV. */
+  measuredAngleDeg: number;
+  /** Relative angular error of the saved calibration, %. */
+  angleErrorPct: number;
+  /**
+   * Implied bias on reported basal area, %. Positive means the app would
+   * over-report. BAF ∝ sin²(θ/2), so the bias is the squared focal-length
+   * ratio: ((tan(measured/2)/tan(expected/2))² − 1) × 100.
+   */
+  basalAreaBiasPct: number;
+  pass: boolean;
+}
+
+/**
+ * Self-check of a saved calibration (the inverse of {@link hfovFromCalibration}):
+ * the user marks a reference object of known width at a known distance, and we
+ * compare the angle the saved HFOV assigns to that span against the true angle
+ * from geometry. This lets the app *prove* its gauge is right before a sweep —
+ * something a physical relascope can't do for a damaged or misread scale.
+ */
+export function checkCalibration(params: {
+  objectWidthM: number;
+  distanceM: number;
+  /** Marked object span, in native frame pixels. */
+  markedFramePx: number;
+  frameWidthPx: number;
+  /** The saved (to-be-verified) horizontal field of view, degrees. */
+  hfovDeg: number;
+}): CalibrationCheckResult {
+  const { objectWidthM, distanceM, markedFramePx, frameWidthPx, hfovDeg } = params;
+  if (
+    objectWidthM <= 0 ||
+    distanceM <= 0 ||
+    markedFramePx <= 0 ||
+    frameWidthPx <= 0 ||
+    hfovDeg <= 0
+  ) {
+    throw new Error("Calibration check inputs must be positive.");
+  }
+  const expectedAngleDeg = toDeg(2 * Math.atan(objectWidthM / 2 / distanceM));
+  const measuredAngleDeg = frameWidthToAngleDeg(markedFramePx, hfovDeg, frameWidthPx);
+  const angleErrorPct = (measuredAngleDeg / expectedAngleDeg - 1) * 100;
+  const focalRatio =
+    Math.tan(toRad(measuredAngleDeg) / 2) / Math.tan(toRad(expectedAngleDeg) / 2);
+  const basalAreaBiasPct = (focalRatio * focalRatio - 1) * 100;
+  return {
+    expectedAngleDeg,
+    measuredAngleDeg,
+    angleErrorPct,
+    basalAreaBiasPct,
+    pass: Math.abs(basalAreaBiasPct) <= CALIBRATION_CHECK_TOLERANCE_PCT,
+  };
+}
+
 /** Effective tree count, applying the borderline policy (PRD §5.3). */
 export function effectiveCount(
   trees: TreeObservation[],

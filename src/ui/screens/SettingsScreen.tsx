@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { BAF_PRESETS, type Language } from "../../storage/types";
 import type { BorderlinePolicy } from "../../domain/relascope";
@@ -83,9 +84,32 @@ export function SettingsScreen() {
               {t("slopeHelp")}
             </p>
           </div>
+
+          <div>
+            <label className="field">{t("sunlightMode")}</label>
+            <div className="seg">
+              {(
+                [
+                  [true, t("slopeOn")],
+                  [false, t("slopeOff")],
+                ] as [boolean, string][]
+              ).map(([on, label]) => (
+                <button
+                  key={String(on)}
+                  className={settings.sunlightMode === on ? "active" : ""}
+                  onClick={() => updateSettings({ sunlightMode: on })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="muted" style={{ fontSize: 13, margin: "6px 0 0" }}>
+              {t("sunlightHelp")}
+            </p>
+          </div>
         </div>
 
-        <div className="card">
+        <div className="card stack">
           <div className="metric">
             <span>{t("calibration")}</span>
             <span className="value" style={{ fontSize: 18 }}>
@@ -95,6 +119,16 @@ export function SettingsScreen() {
               </span>
             </span>
           </div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            {settings.lastCheckAt
+              ? `${t("lastVerified")}: ${new Date(settings.lastCheckAt).toLocaleDateString()} · ${t("baBias")} ${
+                  settings.lastCheckBiasPct ?? 0
+                }%`
+              : t("neverVerified")}
+          </p>
+          <Link to="/verify" className="btn ghost">
+            {t("verifyCalibration")}
+          </Link>
         </div>
 
         <p className="muted" style={{ fontSize: 13, textAlign: "center" }}>

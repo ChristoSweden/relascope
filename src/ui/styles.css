@@ -397,6 +397,19 @@ textarea {
   touch-action: none;
 }
 
+/* Where the saved calibration *predicts* the reference object's edges are.
+   If the user's markers land inside/outside this frame, the HFOV is off. */
+.predicted-frame {
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 2px dashed var(--amber);
+  border-right: 2px dashed var(--amber);
+  pointer-events: none;
+}
+
 .calib-marker::after {
   content: "";
   position: absolute;
@@ -447,4 +460,145 @@ textarea {
   width: 100%;
   max-width: 480px;
   margin-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+/* ---- Sunlight mode: high-contrast light theme for direct sun ---- */
+body.sunlight {
+  --bg: #ffffff;
+  --surface: #f1f5f1;
+  --surface-2: #e2e8e2;
+  --line: #94a394;
+  --green: #15803d;
+  --green-dark: #bbf7d0;
+  --text: #0a0f0a;
+  --muted: #3f4f3f;
+}
+
+body.sunlight .btn.primary {
+  color: #0a0f0a;
+}
+
+body.sunlight .banner.warn {
+  color: #92400e;
+}
+
+body.sunlight .banner.ok {
+  color: #14532d;
+}
+
+/* The sweep screen stays dark — it is a camera view — but its buttons get
+   stronger fills so the labels survive glare on the glass. */
+body.sunlight .call-in {
+  background: rgba(34, 197, 94, 0.55);
+}
+body.sunlight .call-bord {
+  background: rgba(245, 158, 11, 0.55);
+}
+body.sunlight .call-out {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* ---- Stand report (print / save-as-PDF) ---- */
+.report {
+  background: #fff;
+  color: #111;
+  min-height: 100%;
+  padding: 24px;
+  font-size: 14px;
+}
+
+.report header h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+}
+
+.report-sub {
+  margin: 0;
+  color: #555;
+}
+
+.report h2 {
+  font-size: 16px;
+  border-bottom: 2px solid #111;
+  padding-bottom: 4px;
+  margin: 24px 0 10px;
+}
+
+.report table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report th,
+.report td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #ccc;
+  vertical-align: top;
+}
+
+.report-summary th {
+  width: 40%;
+  color: #444;
+  font-weight: 600;
+}
+
+.report-points thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #444;
+  border-bottom: 2px solid #111;
+}
+
+.report-footnote {
+  color: #666;
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+
+.report-method {
+  color: #333;
+  line-height: 1.5;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.report-actions .btn {
+  width: auto;
+}
+
+/* The report route lives inside the dark app shell; let it span fully. */
+.report .btn {
+  color: #111;
+  background: #f1f5f1;
+  border-color: #94a394;
+}
+
+.report .btn.primary {
+  background: #bbf7d0;
+  border-color: #15803d;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .app {
+    max-width: none;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .report {
+    padding: 0;
+  }
 }

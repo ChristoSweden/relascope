@@ -145,12 +145,17 @@ export function StandScreen() {
         </div>
 
         {stand.points.length > 0 && (
-          <button
-            className="btn"
-            onClick={() => downloadText(`${stand.name.replace(/\s+/g, "_")}.csv`, standToCsv(stand))}
-          >
-            {t("exportCsv")}
-          </button>
+          <>
+            <button className="btn" onClick={() => navigate(`/stand/${stand.id}/report`)}>
+              {t("standReport")}
+            </button>
+            <button
+              className="btn"
+              onClick={() => downloadText(`${stand.name.replace(/\s+/g, "_")}.csv`, standToCsv(stand))}
+            >
+              {t("exportCsv")}
+            </button>
+          </>
         )}
         <button className="btn danger ghost" onClick={removeStand}>
           {t("delete")} {stand.name}

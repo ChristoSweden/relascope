@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { getStand, newId } from "../../storage/store";
-import { useCamera, useMotion, useSweepProgress, useGeolocation } from "../hooks";
+import { useCamera, useMotion, useSweepProgress, useGeolocation, useWakeLock } from "../hooks";
 import {
   gaugeBarWidthPx,
   coverDisplayScale,
@@ -27,6 +27,7 @@ export function SweepScreen() {
   const { heading, elevationDeg, needsPermission, active, start: startMotion } = useMotion();
   const { swept, reset } = useSweepProgress(heading);
   const geo = useGeolocation();
+  useWakeLock(true); // a sweep must survive minutes without screen touches
 
   useEffect(() => {
     start();
