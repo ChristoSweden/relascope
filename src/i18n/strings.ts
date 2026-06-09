@@ -126,6 +126,9 @@ const en: Dict = {
   restoreDone: "Backup restored.",
   restoreInvalid: "That file is not a valid backup.",
   editNotes: "Edit notes",
+  feedback: "Give feedback",
+  feedbackHelp:
+    "Tested the app in the forest? Tell us what worked and what didn't — especially how the numbers compare to a physical relascope.",
 };
 
 const sv: Dict = {
@@ -249,6 +252,9 @@ const sv: Dict = {
   restoreDone: "Säkerhetskopian återställd.",
   restoreInvalid: "Filen är inte en giltig säkerhetskopia.",
   editNotes: "Redigera anteckningar",
+  feedback: "Ge feedback",
+  feedbackHelp:
+    "Har du testat appen i skogen? Berätta vad som fungerade och inte — särskilt hur siffrorna står sig mot ett vanligt relaskop.",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };
