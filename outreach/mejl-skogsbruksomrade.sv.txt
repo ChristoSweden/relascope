@@ -1,0 +1,24 @@
+Ämne: Kort demo på er nästa skogsdag? Gratis relaskop-app söker testare
+
+Hej [namn],
+
+jag heter Christo och har utvecklat ett gratis verktyg för skogsägare:
+en app som gör mobilen till ett relaskop. Man kalibrerar kameran en gång,
+sveper ett varv på provytan och pekar ut träffarna — grundytan (m²/ha)
+visas direkt, med medelvärde och felmarginal över flera provytor. Den
+fungerar helt offline (ingen täckning behövs i skogen), kräver inget konto
+och installeras direkt från webbläsaren utan app-butik:
+
+https://christosweden.github.io/relascope/
+
+Jag letar nu efter skogsägare som vill testa den sida vid sida med ett
+vanligt relaskop och säga om siffrorna håller. Skulle det passa att jag
+kommer förbi på en skogsdag eller medlemsträff i [område] och visar den
+på 10 minuter? Deltagarna kan prova direkt i fält på sina egna telefoner —
+jag tar med utskrivna lappar med QR-kod och en kort testguide.
+
+Appen är gratis och all mätdata stannar i användarens telefon.
+
+Vänliga hälsningar,
+Christo
+christo@beetlesense.com
