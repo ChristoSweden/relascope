@@ -1,0 +1,17 @@
+GRATIS VERKTYG: RELASKOPET I MOBILEN — TESTARE SÖKES
+
+Jag har byggt en app som gör mobilen till ett relaskop (Bitterlich-mätning):
+kalibrera kameran en gång, svep ett varv på provytan, peka ut varje stam som
+träff/gränsträd/ej träff — och du får grundytan (m²/ha) direkt på skärmen.
+Flera provytor ger medelvärde med felmarginal, och du kan exportera CSV eller
+en utskrivbar beståndsrapport att lämna till virkesköparen.
+
+Fungerar helt offline, inget konto, ingen app-butik — öppna länken i mobilen
+och välj "Lägg till på hemskärmen":
+
+https://christosweden.github.io/relascope/
+
+Nu söker jag skogsägare som vill jämföra appen mot sitt vanliga relaskop på
+några provytor och säga om siffrorna stämmer. All mätdata stannar i din
+telefon. Svara här eller mejla christo@beetlesense.com — jag skickar en kort
+testguide (tar ca 20–30 min i skogen).

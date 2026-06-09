@@ -179,6 +179,21 @@ export function SettingsScreen() {
           {restoreMsg === "invalid" && <div className="banner warn">{t("restoreInvalid")}</div>}
         </div>
 
+        <div className="card stack">
+          <label className="field" style={{ marginBottom: 0 }}>
+            {t("feedback")}
+          </label>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            {t("feedbackHelp")}
+          </p>
+          <a
+            className="btn"
+            href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+          >
+            {t("feedback")}
+          </a>
+        </div>
+
         <p className="muted" style={{ fontSize: 13, textAlign: "center" }}>
           ✓ {t("offlineReady")}
         </p>

@@ -585,6 +585,27 @@ body.sunlight .call-out {
   border-color: #15803d;
 }
 
+/* Crash screen rendered by the top-level ErrorBoundary. */
+.error-boundary {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.error-boundary .btn {
+  margin-top: 8px;
+}
+
+.error-boundary-detail {
+  color: var(--muted);
+  font-size: 13px;
+  word-break: break-word;
+}
+
 @media print {
   body {
     background: #fff;
