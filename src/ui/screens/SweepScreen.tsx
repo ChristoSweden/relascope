@@ -7,10 +7,13 @@ import {
   gaugeBarWidthPx,
   coverDisplayScale,
   limitingDistanceM,
+  TREE_SPECIES,
   type TreeCall,
   type TreeObservation,
+  type TreeSpecies,
 } from "../../domain/relascope";
 import { BAF_PRESETS } from "../../storage/types";
+import { speciesKey } from "../../i18n/strings";
 
 export function SweepScreen() {
   const { standId } = useParams();
@@ -22,6 +25,9 @@ export function SweepScreen() {
   const [trees, setTrees] = useState<TreeObservation[]>([]);
   const [viewport, setViewport] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [confirming, setConfirming] = useState(false);
+  // Sticky species tag applied to subsequent taps; null = don't tag (zero
+  // extra taps for owners who don't need the mix).
+  const [species, setSpecies] = useState<TreeSpecies | null>(null);
 
   const { videoRef, start, stop, error, ready, frame } = useCamera();
   const { heading, elevationDeg, needsPermission, active, start: startMotion } = useMotion();
@@ -76,7 +82,12 @@ export function SweepScreen() {
       setConfirming(true);
       return;
     }
-    record({ call: c, bearingDeg: heading ?? undefined, elevationDeg: active ? elevationDeg : undefined });
+    record({
+      call: c,
+      species: species ?? undefined,
+      bearingDeg: heading ?? undefined,
+      elevationDeg: active ? elevationDeg : undefined,
+    });
   };
 
   const undo = () => setTrees((prev) => prev.slice(0, -1));
@@ -170,6 +181,18 @@ export function SweepScreen() {
 
         {ready && <div className="align-hint">{t("alignTrunk")}</div>}
 
+        <div className="seg species-seg">
+          {TREE_SPECIES.map((s) => (
+            <button
+              key={s}
+              className={species === s ? "active" : ""}
+              onClick={() => setSpecies((prev) => (prev === s ? null : s))}
+            >
+              {t(speciesKey(s))}
+            </button>
+          ))}
+        </div>
+
         <div className="call-buttons">
           <button className="call-out" onClick={() => call("out")}>
             {t("out")}
@@ -196,6 +219,7 @@ export function SweepScreen() {
           onResolve={(resolvedCall, distanceM, dbhCm) => {
             record({
               call: resolvedCall,
+              species: species ?? undefined,
               distanceM,
               dbhCm,
               bearingDeg: heading ?? undefined,

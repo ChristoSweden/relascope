@@ -585,6 +585,11 @@ body.sunlight .call-out {
   border-color: #15803d;
 }
 
+/* Species chips in the sweep HUD: optional, sticky, zero-tap by default. */
+.species-seg {
+  margin-bottom: 10px;
+}
+
 /* Crash screen rendered by the top-level ErrorBoundary. */
 .error-boundary {
   min-height: 100dvh;

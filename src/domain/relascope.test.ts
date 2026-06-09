@@ -16,6 +16,10 @@ import {
   treeBasalAreaM2,
   computePointMetrics,
   aggregateStand,
+  speciesBreakdown,
+  aggregateSpecies,
+  estimateVolumePerHa,
+  STAND_FORM_FACTOR,
   type TreeObservation,
 } from "./relascope";
 
@@ -287,5 +291,72 @@ describe("stand aggregation (PRD §5.4)", () => {
     const a = aggregateStand([10, 10, 10]);
     expect(a.coefficientOfVariationPct).toBe(0);
     expect(a.suggestedAdditionalPoints).toBe(0);
+  });
+});
+
+describe("species mix", () => {
+  const trees: TreeObservation[] = [
+    { call: "in", species: "pine" },
+    { call: "in", species: "pine" },
+    { call: "borderline", species: "spruce" },
+    { call: "in", species: "deciduous" },
+    { call: "in" }, // counted but untagged
+    { call: "out", species: "spruce" }, // out trees never count
+  ];
+
+  it("weights species counts like the basal-area count (in=1, borderline=½)", () => {
+    const b = speciesBreakdown(trees);
+    expect(b.effectiveCounts.pine).toBe(2);
+    expect(b.effectiveCounts.spruce).toBe(0.5);
+    expect(b.effectiveCounts.deciduous).toBe(1);
+    expect(b.unspecified).toBe(1);
+    expect(b.hasSpecies).toBe(true);
+  });
+
+  it("reports no species for an untagged sweep", () => {
+    const b = speciesBreakdown([{ call: "in" }, { call: "borderline" }]);
+    expect(b.hasSpecies).toBe(false);
+    expect(b.unspecified).toBe(1.5);
+  });
+
+  it("aggregates shares of total basal area across points", () => {
+    const shares = aggregateSpecies([
+      { baf: 2, trees },
+      { baf: 2, trees: [{ call: "in", species: "pine" }] },
+    ]);
+    // Point 1: pine 4, spruce 1, deciduous 2, unspecified 2 m²/ha.
+    // Point 2: pine 2 m²/ha. Means: pine 3, spruce 0.5, deciduous 1, unspec 1.
+    expect(shares.basalAreaPerHa.pine).toBeCloseTo(3, 10);
+    expect(shares.basalAreaPerHa.spruce).toBeCloseTo(0.5, 10);
+    expect(shares.basalAreaPerHa.deciduous).toBeCloseTo(1, 10);
+    expect(shares.unspecifiedBasalAreaPerHa).toBeCloseTo(1, 10);
+    const totalPct =
+      shares.sharePct.pine +
+      shares.sharePct.spruce +
+      shares.sharePct.deciduous +
+      shares.unspecifiedSharePct;
+    expect(totalPct).toBeCloseTo(100, 10);
+    expect(shares.sharePct.pine).toBeCloseTo((3 / 5.5) * 100, 10);
+  });
+
+  it("returns zero shares for no points", () => {
+    const shares = aggregateSpecies([]);
+    expect(shares.hasSpecies).toBe(false);
+    expect(shares.sharePct.pine).toBe(0);
+  });
+});
+
+describe("volume estimate (V = F·G·H)", () => {
+  it("computes the classic relascope volume shortcut", () => {
+    // G = 25 m²/ha, H = 20 m, F = 0.5 → 250 m³/ha.
+    expect(estimateVolumePerHa(25, 20)).toBeCloseTo(250, 10);
+    expect(STAND_FORM_FACTOR).toBe(0.5);
+  });
+
+  it("returns null when height is missing or invalid", () => {
+    expect(estimateVolumePerHa(25, null)).toBeNull();
+    expect(estimateVolumePerHa(25, undefined)).toBeNull();
+    expect(estimateVolumePerHa(25, 0)).toBeNull();
+    expect(estimateVolumePerHa(25, NaN)).toBeNull();
   });
 });

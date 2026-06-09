@@ -129,6 +129,19 @@ const en: Dict = {
   feedback: "Give feedback",
   feedbackHelp:
     "Tested the app in the forest? Tell us what worked and what didn't — especially how the numbers compare to a physical relascope.",
+  species: "Species",
+  speciesPine: "Pine",
+  speciesSpruce: "Spruce",
+  speciesDeciduous: "Broadleaf",
+  speciesUnspecified: "Unspecified",
+  speciesShare: "Species mix (share of basal area)",
+  meanHeight: "Mean height",
+  meanHeightPrompt:
+    "Mean stand height in metres (used for the volume estimate). Leave empty to clear.",
+  setMeanHeight: "Set mean height for volume",
+  volumePerHa: "Standing volume",
+  volumeMethodNote:
+    "Standing volume estimated as V = F·G·H with whole-stand form factor F = 0.5 and owner-entered mean height H = {h} m.",
 };
 
 const sv: Dict = {
@@ -255,6 +268,19 @@ const sv: Dict = {
   feedback: "Ge feedback",
   feedbackHelp:
     "Har du testat appen i skogen? Berätta vad som fungerade och inte — särskilt hur siffrorna står sig mot ett vanligt relaskop.",
+  species: "Trädslag",
+  speciesPine: "Tall",
+  speciesSpruce: "Gran",
+  speciesDeciduous: "Löv",
+  speciesUnspecified: "Ospecificerat",
+  speciesShare: "Trädslagsfördelning (andel av grundytan)",
+  meanHeight: "Medelhöjd",
+  meanHeightPrompt:
+    "Beståndets medelhöjd i meter (används för volymuppskattningen). Lämna tomt för att rensa.",
+  setMeanHeight: "Ange medelhöjd för volym",
+  volumePerHa: "Stående volym",
+  volumeMethodNote:
+    "Stående volym uppskattad som V = F·G·H med beståndsformtal F = 0,5 och ägarens angivna medelhöjd H = {h} m.",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };
@@ -265,6 +291,11 @@ export function translate(lang: Language, key: string, vars?: Record<string, str
     for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   }
   return s;
+}
+
+/** String key for a species group's display name. */
+export function speciesKey(s: "pine" | "spruce" | "deciduous"): string {
+  return s === "pine" ? "speciesPine" : s === "spruce" ? "speciesSpruce" : "speciesDeciduous";
 }
 
 export function detectLanguage(): Language {

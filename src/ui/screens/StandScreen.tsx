@@ -1,9 +1,16 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { getStand } from "../../storage/store";
-import { aggregateStand, computePointMetrics } from "../../domain/relascope";
+import {
+  aggregateStand,
+  aggregateSpecies,
+  computePointMetrics,
+  estimateVolumePerHa,
+  TREE_SPECIES,
+} from "../../domain/relascope";
 import { standToCsv, downloadText } from "../../storage/export";
 import { TopBar } from "../components/TopBar";
+import { speciesKey } from "../../i18n/strings";
 
 export function StandScreen() {
   const { standId } = useParams();
@@ -25,6 +32,8 @@ export function StandScreen() {
   const agg = aggregateStand(
     stand.points.map((p) => computePointMetrics(p.trees, p.baf, p.borderlinePolicy).basalAreaPerHa),
   );
+  const species = aggregateSpecies(stand.points);
+  const volume = estimateVolumePerHa(agg.meanBasalAreaPerHa, stand.meanHeightM);
 
   const removePoint = (pointId: string) => {
     if (!confirm(t("deletePointConfirm"))) return;
@@ -40,6 +49,13 @@ export function StandScreen() {
   const rename = () => {
     const name = prompt(t("standName"), stand.name);
     if (name && name.trim()) upsertStand({ ...stand, name: name.trim() });
+  };
+
+  const editMeanHeight = () => {
+    const raw = prompt(t("meanHeightPrompt"), stand.meanHeightM ? String(stand.meanHeightM) : "");
+    if (raw === null) return;
+    const h = parseFloat(raw.replace(",", "."));
+    upsertStand({ ...stand, meanHeightM: Number.isFinite(h) && h > 0 ? h : null });
   };
 
   const editNotes = (pointId: string) => {
@@ -83,6 +99,36 @@ export function StandScreen() {
               <span className="value">
                 {agg.coefficientOfVariationPct.toFixed(0)}
                 <span className="unit">%</span>
+              </span>
+            </div>
+            {species.hasSpecies && (
+              <div className="metric">
+                <span>{t("species")}</span>
+                <span className="value" style={{ fontSize: 16 }}>
+                  {TREE_SPECIES.filter((s) => species.sharePct[s] > 0)
+                    .map((s) => `${t(speciesKey(s))} ${Math.round(species.sharePct[s])}%`)
+                    .join(" · ")}
+                  {species.unspecifiedSharePct >= 0.5
+                    ? ` · ${t("speciesUnspecified")} ${Math.round(species.unspecifiedSharePct)}%`
+                    : ""}
+                </span>
+              </div>
+            )}
+            <div className="metric">
+              <span>
+                {t("volumePerHa")} <span className="tag estimate">{t("estimate")}</span>
+              </span>
+              <span className="value" style={{ fontSize: 18 }}>
+                {volume !== null ? (
+                  <>
+                    {Math.round(volume)} <span className="unit">m³/ha</span>{" "}
+                  </>
+                ) : (
+                  "— "
+                )}
+                <button className="btn small ghost" onClick={editMeanHeight} aria-label={t("setMeanHeight")}>
+                  {stand.meanHeightM ? `${t("meanHeight")} ${stand.meanHeightM} m ✎` : `+ ${t("meanHeight")}`}
+                </button>
               </span>
             </div>
             <p className="muted" style={{ margin: "10px 0 0", fontSize: 14 }}>
