@@ -51,6 +51,10 @@ export function HomeScreen() {
           + {t("newStand")}
         </button>
 
+        <Link to="/measure" className="btn ghost">
+          🌲 {t("measureTitle")}
+        </Link>
+
         <h2 style={{ fontSize: 16, marginBottom: 0 }}>{t("stands")}</h2>
         {stands.length === 0 && <p className="muted">{t("noStands")}</p>}
         <div className="stack">

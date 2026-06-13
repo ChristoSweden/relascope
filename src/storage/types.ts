@@ -43,6 +43,8 @@ export interface Settings {
   borderlinePolicy: BorderlinePolicy;
   /** Automatic terrain-slope compensation of the gauge angle (PRD §9). */
   slopeCompensation: boolean;
+  /** Observer eye height (m) for clinometer ranging in the measure tool. */
+  eyeHeightM: number;
   /** High-contrast light theme for direct-sunlight field use. */
   sunlightMode: boolean;
   /** Implied basal-area bias from the last calibration self-check, %. */
@@ -60,6 +62,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultBaf: 2, // Nordic default (PRD §8).
   borderlinePolicy: "half",
   slopeCompensation: true,
+  eyeHeightM: 1.5,
   sunlightMode: false,
   lastCheckBiasPct: null,
   lastCheckAt: null,

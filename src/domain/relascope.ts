@@ -155,6 +155,28 @@ export function coverDisplayScale(
 }
 
 /**
+ * Horizontal span between two edge markers, in *native frame* pixels.
+ *
+ * Markers are placed as fractions [0,1] of a cover-cropped preview; this undoes
+ * the object-fit: cover scaling so the span is resolution- and aspect-ratio
+ * independent. Shared by calibration (solve for HFOV) and the measure tool
+ * (solve for the angle a trunk subtends) so both read the preview identically.
+ */
+export function markerSpanFramePx(params: {
+  leftFrac: number;
+  rightFrac: number;
+  stageWidthPx: number;
+  stageHeightPx: number;
+  frameWidthPx: number;
+  frameHeightPx: number;
+}): number {
+  const { leftFrac, rightFrac, stageWidthPx, stageHeightPx, frameWidthPx, frameHeightPx } = params;
+  const scale = coverDisplayScale(frameWidthPx, frameHeightPx, stageWidthPx, stageHeightPx);
+  const cssPx = Math.abs(rightFrac - leftFrac) * stageWidthPx;
+  return cssPx / scale;
+}
+
+/**
  * Recover horizontal field of view from a guided calibration: a reference
  * object of known real width is held at a known distance and its on-screen
  * pixel width (already converted to *native frame* pixels) is marked. This is
@@ -445,6 +467,117 @@ export function treeHeightM(
   if (Math.abs(baseAngleDeg) > 85 || Math.abs(topAngleDeg) > 85) return null;
   const h = distanceM * (Math.tan(toRad(topAngleDeg)) - Math.tan(toRad(baseAngleDeg)));
   return h > 0 ? h : null;
+}
+
+// ---------------------------------------------------------------------------
+// Single-tree dimensions: optical distance, upper-stem diameter and stem volume.
+//
+// A physical Spiegel-Relaskop reads distance, upper diameters and volume, not
+// just height and basal area. These reuse the inputs the phone already gives
+// the height tool — a calibrated angle scale (HFOV, read off the edge markers)
+// and the inclinometer pitch — so they are plain geometry, no new hardware.
+//
+// Round-trunk model: a trunk of diameter d at range D subtends
+// α = 2·asin((d/2)/D) — the same sine geometry as the BAF critical angle
+// (BAF = 2500·sin²(θ/2)), keeping diameter/distance consistent with the
+// angle-count math.
+// ---------------------------------------------------------------------------
+
+/**
+ * Slant range (metres) to a round trunk of known diameter `dbhCm` that subtends
+ * `angularWidthDeg`. The trunk is the "known staff": a stem of measured DBH gives
+ * the distance from its on-screen width, like a relascope ranging off a target.
+ * D = (d/2) / sin(α/2).
+ */
+export function trunkSlantRangeM(dbhCm: number, angularWidthDeg: number): number {
+  if (dbhCm <= 0 || angularWidthDeg <= 0) return 0;
+  return dbhCm / 100 / 2 / Math.sin(toRad(angularWidthDeg) / 2);
+}
+
+/**
+ * Diameter (centimetres) of a trunk subtending `angularWidthDeg` at slant range
+ * `slantM` — the relascope's upper-stem reading: aim at any height, mark the
+ * edges, read the diameter. d = 2·D·sin(α/2).
+ */
+export function diameterFromAngleCm(angularWidthDeg: number, slantM: number): number {
+  if (slantM <= 0 || angularWidthDeg <= 0) return 0;
+  return 2 * slantM * Math.sin(toRad(angularWidthDeg) / 2) * 100;
+}
+
+/** Horizontal distance from a slant range and the sight-line pitch. D_h = D·cos(φ). */
+export function horizontalDistanceM(slantM: number, pitchDeg: number): number {
+  return slantM * Math.cos(toRad(pitchDeg));
+}
+
+/**
+ * Horizontal distance (metres) to a tree from eye height and the depression
+ * angle down to its base, on level ground: D = h / tan(δ). Needs only the
+ * inclinometer and a one-time eye-height setting — no known diameter — so DBH
+ * can then be read optically. Accuracy falls off for distant trees (small δ).
+ */
+export function distanceFromEyeHeightM(eyeHeightM: number, baseDepressionDeg: number): number {
+  if (eyeHeightM <= 0 || baseDepressionDeg <= 0) return 0;
+  return eyeHeightM / Math.tan(toRad(baseDepressionDeg));
+}
+
+/**
+ * Height (metres) above the tree base of a point sighted at pitch `angleDeg`,
+ * given the base pitch and horizontal distance. Files an upper diameter at its
+ * true stem height. h = D·(tan θ − tan θ_base) (base pitch is negative).
+ */
+export function stemHeightAtAngleM(horizontalM: number, baseAngleDeg: number, angleDeg: number): number {
+  if (horizontalM <= 0) return 0;
+  return horizontalM * (Math.tan(toRad(angleDeg)) - Math.tan(toRad(baseAngleDeg)));
+}
+
+/** Cross-sectional area (m²) of a stem of diameter `diaCm`. */
+export function sectionAreaM2(diaCm: number): number {
+  const d = diaCm / 100;
+  return (Math.PI / 4) * d * d;
+}
+
+/** A diameter measured at a height up the stem, for taper/volume. */
+export interface StemSection {
+  /** Height above the tree base, metres. */
+  heightM: number;
+  /** Stem diameter at that height, centimetres. */
+  diameterCm: number;
+}
+
+/**
+ * Stem volume (m³) integrated from measured diameters up the stem — the payoff of
+ * reading upper diameters, which a relascope makes you tabulate by hand. Pairs of
+ * sections use **Smalian's formula** V = (A₁+A₂)/2·Δh; the butt below the lowest
+ * section is a cylinder of its area, and when `totalHeightM` is known the tip
+ * above the highest section is a cone (diameter → 0).
+ */
+export function stemVolumeM3(sections: StemSection[], totalHeightM?: number): number {
+  const pts = sections
+    .filter((s) => s.diameterCm > 0 && s.heightM >= 0)
+    .sort((a, b) => a.heightM - b.heightM);
+  if (pts.length === 0) return 0;
+
+  let volume = sectionAreaM2(pts[0].diameterCm) * pts[0].heightM; // butt cylinder
+  for (let i = 1; i < pts.length; i++) {
+    const a1 = sectionAreaM2(pts[i - 1].diameterCm);
+    const a2 = sectionAreaM2(pts[i].diameterCm);
+    volume += ((a1 + a2) / 2) * (pts[i].heightM - pts[i - 1].heightM);
+  }
+  const top = pts[pts.length - 1];
+  if (typeof totalHeightM === "number" && totalHeightM > top.heightM) {
+    volume += (sectionAreaM2(top.diameterCm) / 3) * (totalHeightM - top.heightM);
+  }
+  return volume;
+}
+
+/**
+ * Breast-height form factor f = V / (g₁.₃·H): true stem volume over the cylinder
+ * defined by the basal area at breast height and the tree height. A classic
+ * dimensionless taper descriptor, free once V, DBH and H are measured.
+ */
+export function breastHeightFormFactor(volumeM3: number, dbhCm: number, heightM: number): number {
+  const cylinder = sectionAreaM2(dbhCm) * heightM;
+  return cylinder > 0 ? volumeM3 / cylinder : 0;
 }
 
 export interface StandAggregate {

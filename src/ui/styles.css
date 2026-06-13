@@ -388,6 +388,17 @@ textarea {
   object-fit: cover;
 }
 
+.measure-pitch {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .calib-marker {
   position: absolute;
   top: 0;
