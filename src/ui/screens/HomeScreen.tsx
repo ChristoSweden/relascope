@@ -29,17 +29,18 @@ function RelaIcon() {
 }
 
 function MeasurementRow({ m, onDelete }: { m: TreeMeasurement; onDelete: () => void }) {
+  const { t } = useApp();
   const date = new Date(m.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 13, padding: "12px 14px", borderRadius: 14, border: "1px solid var(--line)", background: "var(--surf)" }}>
       <div style={{ fontSize: 22, flexShrink: 0 }}>🌲</div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>
-          {m.heightM.toFixed(1)}<span style={{ fontSize: 13, fontWeight: 500, color: "var(--muted)", marginLeft: 4 }}>m tall</span>
+          {m.heightM.toFixed(1)}<span style={{ fontSize: 13, fontWeight: 500, color: "var(--muted)", marginLeft: 4 }}>m {t("resultTall")}</span>
         </div>
         {m.dbhCm !== null && (
           <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
-            {m.dbhCm.toFixed(0)} cm thick
+            {m.dbhCm.toFixed(0)} {t("cmThick")}
             {m.woodVolumeM3 !== null && ` · ${m.woodVolumeM3.toFixed(2)} m³`}
           </div>
         )}
@@ -49,7 +50,7 @@ function MeasurementRow({ m, onDelete }: { m: TreeMeasurement; onDelete: () => v
         <button
           onClick={onDelete}
           style={{ background: "none", border: "none", color: "var(--muted)", fontSize: 13, cursor: "pointer", padding: 0 }}
-          aria-label="Delete measurement"
+          aria-label={t("deleteMeasurement")}
         >
           ✕
         </button>
@@ -161,7 +162,7 @@ export function HomeScreen() {
       </div>
 
       <div className="content stack">
-        <div className="section-label">What do you want to do?</div>
+        <div className="section-label">{t("homePrompt")}</div>
 
         {/* Measure a tree — primary CTA */}
         <button className="home-cta primary" onClick={() => navigate("/measure")}>

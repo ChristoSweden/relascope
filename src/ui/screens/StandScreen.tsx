@@ -29,7 +29,7 @@ export function StandScreen() {
       <>
         <TopBar title="—" />
         <div className="content">
-          <p className="muted">Not found.</p>
+          <p className="muted">{t("notFound")}</p>
         </div>
       </>
     );
@@ -107,14 +107,14 @@ export function StandScreen() {
             {/* Hero card: basal area */}
             <div className="hero-card">
               <div className="hero-label">
-                Basal area · mean of {stand.points.length} point{stand.points.length !== 1 ? "s" : ""}
+                {t("heroBasalLabel", { n: stand.points.length })}
               </div>
               <div className="hero-number">
                 {agg.meanBasalAreaPerHa.toFixed(1)}
                 <span className="hero-unit">m²/ha</span>
               </div>
               <div className="hero-sub">
-                ±{agg.standardError.toFixed(1)} standard error · CV {cvPct.toFixed(0)}%
+                {t("heroSub", { se: agg.standardError.toFixed(1), cv: cvPct.toFixed(0) })}
               </div>
             </div>
 
@@ -127,13 +127,13 @@ export function StandScreen() {
             <div className="metric-tiles">
               <div className="metric-tile">
                 <div className="tile-value">{stemsHa ?? "—"}</div>
-                <div className="tile-label">stems/ha</div>
-                <div className="tile-tag">estimate</div>
+                <div className="tile-label">{t("stemsPerHa")}</div>
+                <div className="tile-tag">{t("estimate")}</div>
               </div>
               <div className="metric-tile">
                 <div className="tile-value">{meanDbhCm.toFixed(0)}<span className="tile-unit"> cm</span></div>
-                <div className="tile-label">mean ø</div>
-                <div className="tile-tag">estimate</div>
+                <div className="tile-label">{t("meanDiaTile")}</div>
+                <div className="tile-tag">{t("estimate")}</div>
               </div>
               <button
                 className="metric-tile"
@@ -143,13 +143,13 @@ export function StandScreen() {
                 {volume !== null ? (
                   <>
                     <div className="tile-value">{Math.round(volume)}</div>
-                    <div className="tile-label">m³/ha vol</div>
-                    <div className="tile-tag">estimate</div>
+                    <div className="tile-label">{t("volTile")}</div>
+                    <div className="tile-tag">{t("estimate")}</div>
                   </>
                 ) : (
                   <>
                     <div style={{ fontSize: 13, color: "var(--acc)", fontWeight: 600, marginBottom: 2 }}>+ {t("meanHeight")}</div>
-                    <div className="tile-label">m³/ha vol</div>
+                    <div className="tile-label">{t("volTile")}</div>
                     <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, lineHeight: 1.3 }}>{t("setHeightForVolume")}</div>
                   </>
                 )}
@@ -171,7 +171,7 @@ export function StandScreen() {
             {/* Species mix bar */}
             {species.hasSpecies && (
               <div className="mix-card">
-                <div className="section-label">Species mix · share of basal area</div>
+                <div className="section-label">{t("speciesShare")}</div>
                 <div className="mix-bar">
                   {TREE_SPECIES.filter((s) => species.sharePct[s] > 0).map((s) => (
                     <div
@@ -204,11 +204,11 @@ export function StandScreen() {
             <div className="rec-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
                 <div>
-                  <div className="section-label" style={{ marginBottom: 2 }}>Variation (CV)</div>
+                  <div className="section-label" style={{ marginBottom: 2 }}>{t("coefficientOfVariation")}</div>
                   <div style={{ fontSize: 26, fontWeight: 800 }}>{cvPct.toFixed(0)}%</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div className="section-label" style={{ marginBottom: 2 }}>Points</div>
+                  <div className="section-label" style={{ marginBottom: 2 }}>{t("points")}</div>
                   <div style={{ fontSize: 26, fontWeight: 800 }}>{stand.points.length}</div>
                 </div>
               </div>
