@@ -6,6 +6,7 @@ import {
   aggregateSpecies,
   computePointMetrics,
   estimateVolumePerHa,
+  timberValuePerHaSek,
   TREE_SPECIES,
 } from "../../domain/relascope";
 import { standToCsv, downloadText } from "../../storage/export";
@@ -21,7 +22,7 @@ const SPECIES_COLORS: Record<string, string> = {
 
 export function StandScreen() {
   const { standId } = useParams();
-  const { stands, upsertStand, deleteStand, t } = useApp();
+  const { stands, settings, updateSettings, upsertStand, deleteStand, t } = useApp();
   const navigate = useNavigate();
   const stand = getStand(stands, standId ?? "");
 
@@ -41,6 +42,9 @@ export function StandScreen() {
   );
   const species = aggregateSpecies(stand.points);
   const volume = estimateVolumePerHa(agg.meanBasalAreaPerHa, stand.meanHeightM);
+  const timberValue = timberValuePerHaSek(volume, settings.timberPriceSekPerM3);
+  const fmtSek = (n: number) =>
+    new Intl.NumberFormat(settings.language === "sv" ? "sv-SE" : "en-US", { maximumFractionDigits: 0 }).format(n);
 
   // Estimate stems/ha and mean DBH for the metric tiles (use 24cm default if no DBH data)
   const allPoints = stand.points.map((p) => computePointMetrics(p.trees, p.baf, p.borderlinePolicy));
@@ -78,6 +82,13 @@ export function StandScreen() {
     if (raw === null) return;
     const h = parseFloat(raw.replace(",", "."));
     upsertStand({ ...stand, meanHeightM: Number.isFinite(h) && h > 0 ? h : null });
+  };
+
+  const editTimberPrice = () => {
+    const raw = prompt(t("timberPricePrompt"), String(settings.timberPriceSekPerM3));
+    if (raw === null) return;
+    const p = parseFloat(raw.replace(",", "."));
+    if (Number.isFinite(p) && p >= 0) updateSettings({ timberPriceSekPerM3: p });
   };
 
   const editNotes = (pointId: string) => {
@@ -156,6 +167,19 @@ export function StandScreen() {
                 )}
               </button>
             </div>
+
+            {/* Standing timber value — the number owners actually care about */}
+            {timberValue !== null && (
+              <button className="value-card" onClick={editTimberPrice}>
+                <div className="value-card-label">{t("timberValueTitle")}</div>
+                <div className="value-card-number">
+                  ≈ {fmtSek(timberValue)} <span className="value-card-unit">{t("timberValueUnit")}</span>
+                </div>
+                <div className="value-card-note">
+                  {t("timberValueNote", { price: fmtSek(settings.timberPriceSekPerM3) })}
+                </div>
+              </button>
+            )}
 
             {/* Height tool shortcut (only visible if height set, to allow editing) */}
             {stand.meanHeightM != null && (

@@ -19,6 +19,7 @@ import {
   speciesBreakdown,
   aggregateSpecies,
   estimateVolumePerHa,
+  timberValuePerHaSek,
   STAND_FORM_FACTOR,
   treeHeightM,
   markerSpanFramePx,
@@ -368,6 +369,18 @@ describe("volume estimate (V = F·G·H)", () => {
     expect(estimateVolumePerHa(25, undefined)).toBeNull();
     expect(estimateVolumePerHa(25, 0)).toBeNull();
     expect(estimateVolumePerHa(25, NaN)).toBeNull();
+  });
+});
+
+describe("standing timber value (SEK/ha)", () => {
+  it("multiplies volume by price per m³", () => {
+    // 250 m³/ha at 400 SEK/m³ → 100,000 SEK/ha.
+    expect(timberValuePerHaSek(250, 400)).toBe(100000);
+  });
+
+  it("returns null when volume is missing, so unmeasured stands show no value", () => {
+    expect(timberValuePerHaSek(null, 400)).toBeNull();
+    expect(timberValuePerHaSek(undefined, 400)).toBeNull();
   });
 });
 

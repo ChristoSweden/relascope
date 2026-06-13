@@ -451,6 +451,19 @@ export function estimateVolumePerHa(
 }
 
 /**
+ * Rough standing-timber value, SEK/ha, from a per-hectare volume and a price
+ * per cubic metre. Returns null when volume is missing so the UI shows nothing
+ * rather than a fake "0 SEK" on an unmeasured stand.
+ */
+export function timberValuePerHaSek(
+  volumePerHaM3: number | null | undefined,
+  priceSekPerM3: number,
+): number | null {
+  if (volumePerHaM3 == null || !(volumePerHaM3 >= 0) || !(priceSekPerM3 >= 0)) return null;
+  return volumePerHaM3 * priceSekPerM3;
+}
+
+/**
  * Tree height by clinometer (the relascope's traditional companion tool):
  * stand at a known horizontal distance, sight the trunk base and the top,
  * h = d · (tan θtop − tan θbase) with angles signed relative to the horizon
