@@ -28,8 +28,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 17px;
-  line-height: 1.4;
+  font-size: 19px;
+  line-height: 1.45;
   overscroll-behavior: none;
 }
 
@@ -54,13 +54,13 @@ body {
 }
 
 .topbar h1 {
-  font-size: 18px;
+  font-size: 21px;
   margin: 0;
   flex: 1;
 }
 
 .content {
-  padding: 16px;
+  padding: 18px;
   flex: 1;
 }
 
@@ -73,13 +73,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 52px;
+  min-height: 60px;
   padding: 0 18px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--text);
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
@@ -105,10 +105,10 @@ body {
 }
 
 .btn.small {
-  min-height: 40px;
-  font-size: 15px;
+  min-height: 46px;
+  font-size: 17px;
   width: auto;
-  padding: 0 12px;
+  padding: 0 14px;
 }
 
 .row {
@@ -195,25 +195,25 @@ label.field {
   display: block;
   margin-bottom: 6px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  min-height: 48px;
-  padding: 10px 12px;
+  min-height: 56px;
+  padding: 12px 14px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--text);
-  font-size: 17px;
+  font-size: 19px;
   font-family: inherit;
 }
 
 textarea {
-  min-height: 80px;
+  min-height: 88px;
 }
 
 .seg {
@@ -223,13 +223,13 @@ textarea {
 
 .seg button {
   flex: 1;
-  min-height: 48px;
+  min-height: 56px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .seg button.active {
@@ -649,4 +649,146 @@ body.sunlight .call-out {
   .report {
     padding: 0;
   }
+}
+
+/* ---- Guided measure wizard + onboarding (first-time, large-type) ---- */
+.aim-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 3px solid var(--green);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px rgba(0, 0, 0, 0.6);
+}
+.aim-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.wizard-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 18px 18px calc(20px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 70%, transparent);
+  pointer-events: auto;
+}
+.step-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px #000;
+}
+.step-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 4px 0 6px;
+  text-shadow: 0 1px 4px #000;
+  line-height: 1.2;
+}
+.step-hint {
+  font-size: 18px;
+  color: #e2e8f0;
+  margin: 0 0 16px;
+  text-shadow: 0 1px 3px #000;
+}
+.inline-err {
+  font-size: 17px;
+  font-weight: 600;
+  color: #fde68a;
+  margin: 0 0 12px;
+  text-shadow: 0 1px 3px #000;
+}
+.big-cta {
+  min-height: 72px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.result-hero {
+  text-align: center;
+  padding: 18px 0 6px;
+}
+.result-number {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+}
+.result-number .result-unit {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.result-sub {
+  font-size: 18px;
+  color: #e2e8f0;
+  margin-top: 8px;
+  text-shadow: 0 1px 3px #000;
+}
+
+/* Plain-language home launchpad */
+.home-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  padding: 18px;
+  min-height: 0;
+}
+.home-cta .cta-title {
+  font-size: 22px;
+  font-weight: 800;
+}
+.home-cta .cta-hint {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.home-cta.primary .cta-hint {
+  color: #cde7d4;
+}
+
+/* First-run welcome */
+.onboard {
+  text-align: center;
+  padding: 12px 4px;
+}
+.onboard .onboard-emoji {
+  font-size: 60px;
+}
+.onboard h1 {
+  font-size: 28px;
+  margin: 8px 0 10px;
+}
+.onboard p {
+  font-size: 19px;
+  color: #d7e8dc;
+  margin: 0 auto 16px;
+  max-width: 30ch;
+}
+.onboard ul {
+  text-align: left;
+  font-size: 18px;
+  color: #d7e8dc;
+  margin: 0 auto 20px;
+  max-width: 30ch;
+  padding-left: 22px;
+}
+.onboard ul li {
+  margin-bottom: 8px;
 }

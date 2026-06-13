@@ -175,6 +175,44 @@ const en: Dict = {
   eyeHeight: "Eye height (m)",
   eyeHeightHelp:
     "Your eye height when sighting — lets the measure tool range a tree's distance from the angle down to its base, so you can measure without knowing the diameter.",
+  // First-run welcome (plain language)
+  welcomeTitle: "Measure your trees with your phone",
+  welcomeBody:
+    "Point your phone at a tree and it tells you how tall it is — and roughly how much wood is in it. No tape measure needed.",
+  welcomeNeed1: "Stand back so you can see the whole tree, top to bottom",
+  welcomeNeed2: "Works best in daylight with a clear view of the trunk",
+  welcomeNeed3: "Hold your phone upright",
+  welcomeStart: "Measure my first tree",
+  skip: "Skip",
+  // Home launchpad
+  homeMeasureHint: "Point your phone at a tree to get its height and size.",
+  homeForestTitle: "Estimate my whole forest",
+  homeForestHint: "Walk a circle and tap the trees you see to estimate how much wood you have.",
+  homeSavedTitle: "Saved forest areas",
+  homeMoreSetup: "Set-up & help",
+  // Guided measure wizard
+  mStep: "Step {n} of {total}",
+  mBaseTitle: "Aim at the BOTTOM of the tree",
+  mBaseHint: "Stand back so you see the whole tree. Put the line on the base of the trunk, then tap.",
+  mBaseBtn: "Measure the bottom",
+  mTopTitle: "Now aim at the TOP of the tree",
+  mTopHint: "Tilt your phone up until the line sits on the very top, then tap.",
+  mTopBtn: "Measure the top",
+  mTurnOn: "Turn on the tilt sensor",
+  errAimLower: "Tilt down a little — aim at the base of the trunk.",
+  errAimHigher: "Aim higher — the top must be above the base.",
+  resultTitle: "Your tree",
+  resultTall: "tall",
+  measureAnother: "Measure another tree",
+  addThickness: "Add thickness & wood volume",
+  finishDone: "Done",
+  thickTitle: "Frame the trunk at chest height",
+  thickHint: "Drag the two green lines to the left and right edges of the trunk, then tap.",
+  thickBtn: "Measure thickness",
+  thickResult: "Thickness",
+  woodVolume: "Wood in this tree",
+  thickCalibNote: "Tip: for accurate thickness, set up the camera once (about 30 seconds).",
+  setUpCamera: "Set up camera",
 };
 
 const sv: Dict = {
@@ -347,6 +385,44 @@ const sv: Dict = {
   eyeHeight: "Ögonhöjd (m)",
   eyeHeightHelp:
     "Din ögonhöjd vid siktning — låter mätverktyget bestämma trädets avstånd från vinkeln ner till basen, så att du kan mäta utan att känna diametern.",
+  // Första gången – välkomst (vardagsspråk)
+  welcomeTitle: "Mät dina träd med mobilen",
+  welcomeBody:
+    "Rikta mobilen mot ett träd så får du veta hur högt det är — och ungefär hur mycket virke det innehåller. Ingen måttsats behövs.",
+  welcomeNeed1: "Stå en bit bort så att du ser hela trädet, topp till bas",
+  welcomeNeed2: "Fungerar bäst i dagsljus med fri sikt mot stammen",
+  welcomeNeed3: "Håll mobilen upprätt",
+  welcomeStart: "Mät mitt första träd",
+  skip: "Hoppa över",
+  // Startmeny
+  homeMeasureHint: "Rikta mobilen mot ett träd för att få dess höjd och storlek.",
+  homeForestTitle: "Uppskatta hela min skog",
+  homeForestHint: "Gå ett varv och tryck på träden du ser för att uppskatta hur mycket virke du har.",
+  homeSavedTitle: "Sparade skogsområden",
+  homeMoreSetup: "Inställningar & hjälp",
+  // Guidad mätning
+  mStep: "Steg {n} av {total}",
+  mBaseTitle: "Sikta på trädets NEDRE del",
+  mBaseHint: "Stå en bit bort så att du ser hela trädet. Lägg linjen vid stammens bas och tryck.",
+  mBaseBtn: "Mät basen",
+  mTopTitle: "Sikta nu på trädets TOPP",
+  mTopHint: "Luta mobilen uppåt tills linjen ligger på toppen och tryck.",
+  mTopBtn: "Mät toppen",
+  mTurnOn: "Slå på lutningssensorn",
+  errAimLower: "Luta ner lite — sikta på stammens bas.",
+  errAimHigher: "Sikta högre — toppen måste vara ovanför basen.",
+  resultTitle: "Ditt träd",
+  resultTall: "högt",
+  measureAnother: "Mät ett träd till",
+  addThickness: "Lägg till tjocklek & virkesvolym",
+  finishDone: "Klar",
+  thickTitle: "Rama in stammen i brösthöjd",
+  thickHint: "Dra de två gröna linjerna till stammens vänster- och högerkant och tryck.",
+  thickBtn: "Mät tjocklek",
+  thickResult: "Tjocklek",
+  woodVolume: "Virke i trädet",
+  thickCalibNote: "Tips: för noggrann tjocklek, ställ in kameran en gång (cirka 30 sekunder).",
+  setUpCamera: "Ställ in kameran",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };
