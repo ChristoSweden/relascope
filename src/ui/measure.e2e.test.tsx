@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 //
-// Integration test for the measure tool, in the same plain react-dom style as
-// smoke.test.tsx (no extra test deps). Drives the real screen through the
-// eye-height range → height → volume journey and guards the Android
-// motion-sensor regression (sensors must run without a permission gesture).
+// Integration test for the guided measure wizard, in the same plain react-dom
+// style as smoke.test.tsx. Walks the first-time journey (aim base → aim top →
+// result → optional thickness) and guards the Android motion-sensor regression
+// (the sensor must run without a permission gesture, or the steps never advance).
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -14,7 +14,6 @@ import { App } from "./App";
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 beforeAll(() => {
-  // Motion sensor types exist but require no permission (the Android path).
   (globalThis as Record<string, unknown>).DeviceMotionEvent = class {};
   (globalThis as Record<string, unknown>).DeviceOrientationEvent = class {};
   const track = { getCapabilities: () => ({}), applyConstraints: () => Promise.resolve(), stop: () => undefined };
@@ -60,7 +59,7 @@ const text = () => container?.textContent ?? "";
 
 function clickText(label: string) {
   const btn = [...container!.querySelectorAll("button")].find((b) => (b.textContent ?? "").includes(label));
-  if (!btn) throw new Error(`button "${label}" not found`);
+  if (!btn) throw new Error(`button "${label}" not found in: ${text()}`);
   act(() => btn.dispatchEvent(new MouseEvent("click", { bubbles: true })));
 }
 
@@ -72,42 +71,46 @@ function orientPitch(pitchDeg: number) {
   act(() => window.dispatchEvent(ev));
 }
 
-function setNumberInput(index: number, value: string) {
-  const input = container!.querySelectorAll("input")[index] as HTMLInputElement;
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!;
-  act(() => {
-    setter.call(input, value);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-}
-
-describe("measure tool", () => {
-  it("runs the sensor without a permission gesture (Android regression guard)", async () => {
+describe("guided measure wizard", () => {
+  it("advances only because the sensor runs without a permission gesture (Android guard)", async () => {
     await renderAt("/measure");
-    // No iOS gesture needed → no enable button, sensor live on mount.
-    expect([...container!.querySelectorAll("button")].some((b) => /Enable motion/i.test(b.textContent ?? ""))).toBe(false);
-    expect(text()).toMatch(/Tilt:\s*—/); // pitch unknown until first event
-    orientPitch(-10);
-    expect(text()).toMatch(/Tilt:\s*-?10°/); // event reached the hook → fix works
-  });
-
-  it("ranges from eye height, then measures height and stem volume", async () => {
-    await renderAt("/measure");
-
-    // Aim down at the base: 1.5 m eye height, 8.53° depression → ~10 m.
+    // Step 1 is shown, with the measure button (not a 'turn on sensor' prompt).
+    expect(text()).toMatch(/Step 1 of 3/);
+    expect([...container!.querySelectorAll("button")].some((b) => /Turn on/i.test(b.textContent ?? ""))).toBe(false);
+    // The orientation event reaches the hook → tapping advances to step 2.
     orientPitch(-8.53);
-    clickText("Sight tree base");
-    expect(text()).toMatch(/Distance:\s*10\.0 m/);
+    clickText("Measure the bottom");
+    expect(text()).toMatch(/Step 2 of 3/);
+    expect(text()).toMatch(/TOP of the tree/);
+  });
 
-    // Aim up at the top; height = D·(tan top − tan base) ≈ 7.3 m.
+  it("measures height end-to-end and offers thickness + wood volume", async () => {
+    await renderAt("/measure");
+
+    // Base: 1.5 m eye height, 8.53° down → ~10 m; advance to the top step.
+    orientPitch(-8.53);
+    clickText("Measure the bottom");
+
+    // Top: height = 10·(tan30 − tan(−8.53)) ≈ 7.3 m → result screen.
     orientPitch(30);
-    clickText("Mark top");
-    expect(text()).toMatch(/Tree height/);
-    expect(text()).toMatch(/7\.\d\s*m/);
+    clickText("Measure the top");
+    expect(text()).toMatch(/Your tree/);
+    expect(text()).toMatch(/7\.\d/);
+    expect(text()).toMatch(/m\s*tall/);
 
-    // A DBH turns the taper into a stem volume.
-    setNumberInput(0, "30");
-    expect(text()).toMatch(/Stem volume/);
+    // Optional thickness step yields a wood volume.
+    clickText("Add thickness");
+    orientPitch(-1); // roughly chest height
+    clickText("Measure thickness");
+    expect(text()).toMatch(/Thickness/);
     expect(text()).toMatch(/m³/);
+  });
+
+  it("shows a friendly error when the base sight is not below the horizon", async () => {
+    await renderAt("/measure");
+    orientPitch(10); // aiming up, not at the base
+    clickText("Measure the bottom");
+    expect(text()).toMatch(/aim at the base/i);
+    expect(text()).toMatch(/Step 1 of 3/); // stayed put
   });
 });
