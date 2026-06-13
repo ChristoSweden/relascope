@@ -40,6 +40,8 @@ export function HomeScreen() {
           <div className="onboard-emoji">🌲</div>
           <h1>{t("welcomeTitle")}</h1>
           <p>{t("welcomeBody")}</p>
+          <p style={{ color: "var(--green)" }}>{t("welcomeNew")}</p>
+          <p style={{ fontWeight: 700, margin: "0 auto 6px", maxWidth: "30ch" }}>{t("welcomeNeedLabel")}</p>
           <ul>
             <li>{t("welcomeNeed1")}</li>
             <li>{t("welcomeNeed2")}</li>
