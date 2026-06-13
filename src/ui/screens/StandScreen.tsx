@@ -10,6 +10,7 @@ import {
 } from "../../domain/relascope";
 import { standToCsv, downloadText } from "../../storage/export";
 import { TopBar } from "../components/TopBar";
+import { BeetleRiskHook, SPRUCE_RISK_THRESHOLD_PCT } from "../components/BeetleSenseHook";
 import { speciesKey } from "../../i18n/strings";
 
 const SPECIES_COLORS: Record<string, string> = {
@@ -198,6 +199,11 @@ export function StandScreen() {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Bark-beetle risk: fires only when this stand is spruce-heavy */}
+            {species.hasSpecies && species.sharePct.spruce >= SPRUCE_RISK_THRESHOLD_PCT && (
+              <BeetleRiskHook sprucePct={species.sharePct.spruce} />
             )}
 
             {/* CV / spread card */}

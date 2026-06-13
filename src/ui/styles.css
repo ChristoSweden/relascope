@@ -511,6 +511,18 @@ textarea { min-height: 88px; }
 
 .bs-hook:active { transform: scale(0.985); }
 
+/* Bark-beetle risk variant: amber warning framing, BeetleSense bridge intact */
+.bs-hook--risk {
+  border-color: rgba(244,183,64,0.32);
+  background: linear-gradient(180deg, rgba(244,183,64,0.10), rgba(244,183,64,0.02));
+}
+.bs-hook--risk .bs-hook-dot {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+}
+.bs-hook--risk .bs-hook-brand,
+.bs-hook--risk .bs-hook-cta { color: var(--amber); }
+
 .bs-hook-head {
   display: flex;
   align-items: center;

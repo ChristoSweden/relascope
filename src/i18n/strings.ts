@@ -251,6 +251,12 @@ const en: Dict = {
     "BeetleSense watches your whole forest from space — bark-beetle early warning before damage spreads.",
   bsHookCta: "Explore BeetleSense",
   bsPartOf: "Part of BeetleSense · beetlesense.ai",
+  // Spruce → bark-beetle risk flag (shown on spruce-heavy stand results)
+  beetleRiskBrand: "Bark-beetle risk",
+  beetleRiskTitle: "{pct}% of this stand is spruce",
+  beetleRiskBody:
+    "Spruce is the bark beetle's preferred host. BeetleSense watches spruce-heavy stands like this from space and warns you of an outbreak before the damage spreads.",
+  beetleRiskCta: "See how BeetleSense protects spruce",
 };
 
 const sv: Dict = {
@@ -498,6 +504,12 @@ const sv: Dict = {
     "BeetleSense bevakar hela din skog från rymden — tidig varning för granbarkborre innan skadan sprids.",
   bsHookCta: "Utforska BeetleSense",
   bsPartOf: "En del av BeetleSense · beetlesense.ai",
+  // Gran → granbarkborre-risk
+  beetleRiskBrand: "Granbarkborre-risk",
+  beetleRiskTitle: "{pct}% av beståndet är gran",
+  beetleRiskBody:
+    "Granen är granbarkborrens favoritvärd. BeetleSense bevakar granrika bestånd som detta från rymden och varnar dig för ett angrepp innan skadan sprids.",
+  beetleRiskCta: "Se hur BeetleSense skyddar gran",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };
