@@ -118,6 +118,11 @@ export function StandScreen() {
               </div>
             </div>
 
+            {/* Plain-language gloss: most forest owners have never met "basal area" */}
+            <p className="muted" style={{ margin: "-4px 2px 0", fontSize: 13, lineHeight: 1.45 }}>
+              {t("basalAreaPlain")}
+            </p>
+
             {/* Metric tiles */}
             <div className="metric-tiles">
               <div className="metric-tile">

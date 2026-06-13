@@ -33,6 +33,8 @@ const en: Dict = {
   back: "Back",
   baf: "BAF",
   basalAreaPerHa: "Basal area / ha",
+  basalAreaPlain:
+    "Add up the trunk thickness of every tree at chest height: that's basal area. It's forestry's headline number for how much wood is standing — higher means more timber.",
   stemsPerHa: "Stems / ha",
   meanDbh: "Mean DBH",
   estimate: "estimate",
@@ -268,6 +270,8 @@ const sv: Dict = {
   back: "Tillbaka",
   baf: "Grundyta­faktor",
   basalAreaPerHa: "Grundyta / ha",
+  basalAreaPlain:
+    "Lägg ihop stammarnas tjocklek i brösthöjd för alla träd: det är grundytan. Det är skogsbrukets nyckeltal för hur mycket virke som står — högre betyder mer virke.",
   stemsPerHa: "Stammar / ha",
   meanDbh: "Medel­diameter",
   estimate: "uppskattning",
