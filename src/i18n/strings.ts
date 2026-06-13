@@ -213,6 +213,10 @@ const en: Dict = {
   woodVolume: "Wood in this tree",
   thickCalibNote: "Tip: for accurate thickness, set up the camera once (about 30 seconds).",
   setUpCamera: "Set up camera",
+  iosSensorNote:
+    "On iPhone, tap below to allow the motion (tilt) sensor. The app uses it — and the camera — only to measure the tree. Nothing is recorded or sent anywhere; it all stays on your phone.",
+  privacyNote:
+    "Uses your camera and tilt sensor only to measure. Nothing is sent anywhere — everything stays on your phone, even offline.",
 };
 
 const sv: Dict = {
@@ -423,6 +427,10 @@ const sv: Dict = {
   woodVolume: "Virke i trädet",
   thickCalibNote: "Tips: för noggrann tjocklek, ställ in kameran en gång (cirka 30 sekunder).",
   setUpCamera: "Ställ in kameran",
+  iosSensorNote:
+    "På iPhone, tryck nedan för att tillåta rörelsesensorn (lutning). Appen använder den — och kameran — bara för att mäta trädet. Inget spelas in eller skickas någonstans; allt stannar på din telefon.",
+  privacyNote:
+    "Använder kameran och lutningssensorn bara för att mäta. Inget skickas någonstans — allt stannar på din telefon, även offline.",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };

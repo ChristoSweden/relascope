@@ -52,6 +52,9 @@ export function HomeScreen() {
         <button className="btn ghost" onClick={() => dismissOnboarding()}>
           {t("skip")}
         </button>
+        <p className="muted" style={{ fontSize: 15, textAlign: "center", margin: "4px auto 0", maxWidth: "32ch" }}>
+          🔒 {t("privacyNote")}
+        </p>
       </div>
     );
   }
