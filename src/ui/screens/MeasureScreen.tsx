@@ -16,13 +16,6 @@ const DEG = Math.PI / 180;
 
 type Step = "base" | "top" | "result" | "thick";
 
-/**
- * Guided single-tree measurement for first-time, non-forestry users: one camera
- * step at a time, plain language, one big button per screen. The hero path —
- * aim at the base, aim at the top — needs no calibration and no diameter (the
- * tilt sensor ranges distance off the user's eye height). Thickness + wood
- * volume are an optional follow-on. Built on the same domain geometry as before.
- */
 export function MeasureScreen() {
   const { settings, t } = useApp();
   const navigate = useNavigate();
@@ -62,10 +55,9 @@ export function MeasureScreen() {
     return frameWidthToAngleDeg(span, settings.hfovDeg, frame.width);
   };
 
-  // Step 1: aim at the base. Range distance off eye height; capture base angle.
   const measureBase = () => {
     if (pitchDeg === null) return;
-    const d = distanceFromEyeHeightM(settings.eyeHeightM, -pitchDeg); // base below eye
+    const d = distanceFromEyeHeightM(settings.eyeHeightM, -pitchDeg);
     if (d <= 0) {
       setErr(t("errAimLower"));
       return;
@@ -77,7 +69,6 @@ export function MeasureScreen() {
     setStep("top");
   };
 
-  // Step 2: aim at the top. Compute height.
   const measureTop = () => {
     if (pitchDeg === null || distanceM === null || baseAngle === null) return;
     const h = treeHeightM(distanceM, baseAngle, pitchDeg);
@@ -91,7 +82,6 @@ export function MeasureScreen() {
     setStep("result");
   };
 
-  // Optional: thickness at chest height → wood volume.
   const measureThickness = () => {
     if (distanceM === null) return;
     const angle = currentAngleDeg();
@@ -127,46 +117,53 @@ export function MeasureScreen() {
     );
   }
 
-  // ---- Result screen (plain, big numbers, no camera) ----
+  // ---- Result screen ----
   if (step === "result") {
     return (
       <div className="content stack" style={{ minHeight: "100dvh", justifyContent: "center" }}>
         <div className="result-hero">
-          <div style={{ fontSize: 52 }}>🌲</div>
-          <h2 style={{ margin: "6px 0 14px", fontSize: 24 }}>{t("resultTitle")}</h2>
+          <div className="tree-icon">🌲</div>
+          <div className="result-label">{t("resultTitle")}</div>
           <div className="result-number">
-            {heightM !== null ? heightM.toFixed(1) : "—"} <span className="result-unit">m {t("resultTall")}</span>
+            {heightM !== null ? heightM.toFixed(1) : "—"}
+            <span className="result-unit">m {t("resultTall")}</span>
           </div>
-          {dbhCm !== null && (
-            <div className="result-sub" style={{ marginTop: 14 }}>
-              {t("thickResult")}: <strong>{dbhCm.toFixed(0)} cm</strong>
-              {woodVolumeM3 !== null && (
-                <>
-                  {" · "}
-                  {t("woodVolume")}: <strong>{woodVolumeM3.toFixed(2)} m³</strong>
-                </>
-              )}
-            </div>
-          )}
         </div>
 
-        {dbhCm === null && (
-          <button className="btn" onClick={() => { setErr(null); setStep("thick"); }}>
-            {t("addThickness")}
-          </button>
+        {dbhCm !== null && (
+          <div className="result-tiles">
+            <div className="result-tile">
+              <div className="rt-val">{dbhCm.toFixed(0)}<span className="rt-unit"> cm</span></div>
+              <div className="rt-label">{t("thickResult")}</div>
+            </div>
+            {woodVolumeM3 !== null && (
+              <div className="result-tile">
+                <div className="rt-val">{woodVolumeM3.toFixed(2)}<span className="rt-unit"> m³</span></div>
+                <div className="rt-label">{t("woodVolume")}</div>
+              </div>
+            )}
+          </div>
         )}
-        <button className="btn primary" onClick={startOver}>
-          {t("measureAnother")}
-        </button>
-        <a
-          className="btn ghost"
-          href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
-        >
-          ✉ {t("feedback")}
-        </a>
-        <button className="btn ghost" onClick={() => navigate("/")}>
-          {t("finishDone")}
-        </button>
+
+        <div className="stack">
+          {dbhCm === null && (
+            <button className="btn" onClick={() => { setErr(null); setStep("thick"); }}>
+              {t("addThickness")}
+            </button>
+          )}
+          <button className="btn primary" onClick={startOver}>
+            {t("measureAnother")}
+          </button>
+          <a
+            className="btn ghost"
+            href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+          >
+            ✉ {t("feedback")}
+          </a>
+          <button className="btn ghost" onClick={() => navigate("/")}>
+            {t("finishDone")}
+          </button>
+        </div>
       </div>
     );
   }
@@ -193,7 +190,7 @@ export function MeasureScreen() {
       </div>
 
       <div className="sweep-hud">
-        <button className="btn small ghost" onClick={() => navigate("/")} aria-label={t("back")}>
+        <button className="btn small ghost" onClick={() => navigate("/")} aria-label={t("back")} style={{ backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.18)", color: "#fff" }}>
           ✕
         </button>
       </div>
@@ -218,7 +215,7 @@ export function MeasureScreen() {
         )}
 
         {step === "thick" && !settings.calibrated && (
-          <p className="step-hint" style={{ fontSize: 15, margin: "12px 0 0" }}>
+          <p className="step-hint" style={{ fontSize: 14, margin: "12px 0 0" }}>
             {t("thickCalibNote")}{" "}
             <button
               className="btn small ghost"

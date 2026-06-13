@@ -25,15 +25,13 @@ export function SweepScreen() {
   const [trees, setTrees] = useState<TreeObservation[]>([]);
   const [viewport, setViewport] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [confirming, setConfirming] = useState(false);
-  // Sticky species tag applied to subsequent taps; null = don't tag (zero
-  // extra taps for owners who don't need the mix).
   const [species, setSpecies] = useState<TreeSpecies | null>(null);
 
   const { videoRef, start, stop, error, ready, frame } = useCamera();
   const { heading, elevationDeg, needsPermission, active, start: startMotion } = useMotion();
   const { swept, reset } = useSweepProgress(heading);
   const geo = useGeolocation();
-  useWakeLock(true); // a sweep must survive minutes without screen touches
+  useWakeLock(true);
 
   useEffect(() => {
     start();
@@ -57,7 +55,6 @@ export function SweepScreen() {
   );
 
   const barWidth = useMemo(() => {
-    // Fall back to viewport width before camera metadata arrives.
     const frameW = frame.width || viewport.w;
     const scale = frame.width ? displayScale : 1;
     return gaugeBarWidthPx({
@@ -129,19 +126,28 @@ export function SweepScreen() {
 
   const sweptPct = Math.round((swept / 360) * 100);
   const sloping = settings.slopeCompensation && active && elevationDeg >= 3;
+  const liveBA = (baf * (inCount + bordCount / 2)).toFixed(1);
 
   return (
     <div className="sweep">
       <video ref={videoRef} playsInline muted />
+
+      {/* Gauge bar overlay */}
       <div className="sweep-overlay">
         <div className="gauge-bar" style={{ width: `${barWidth}px` }} />
       </div>
 
+      {/* Top HUD: back + BAF selector */}
       <div className="sweep-hud">
-        <button className="btn small ghost" onClick={() => navigate(-1)} aria-label={t("back")}>
+        <button
+          className="btn small ghost"
+          onClick={() => navigate(-1)}
+          aria-label={t("back")}
+          style={{ backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.18)", color: "#fff", flexShrink: 0 }}
+        >
           ✕
         </button>
-        <div className="seg" style={{ flex: 1 }}>
+        <div className="baf-seg">
           {BAF_PRESETS.map((b) => (
             <button key={b} className={b === baf ? "active" : ""} onClick={() => setBaf(b)}>
               {t("baf")} {b}
@@ -150,18 +156,32 @@ export function SweepScreen() {
         </div>
       </div>
 
+      {/* "LIVE GAUGE" label */}
+      <div className="live-label">
+        <span className="live-dot" />
+        Live gauge
+      </div>
+
+      {/* Bottom controls */}
       <div className="sweep-controls">
-        <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
-          <div className="row" style={{ gap: 10 }}>
+        {/* Progress ring + tree count + undo */}
+        <div className="row" style={{ justifyContent: "space-between", marginBottom: 14 }}>
+          <div className="row" style={{ gap: 11 }}>
             <div className="ring" style={{ ["--pct" as string]: sweptPct }}>
               <span>{sweptPct}%</span>
             </div>
             <div className="count-pill">
-              {t("treeCount")}: {inCount}
-              {bordCount > 0 ? ` +${bordCount}½` : ""}
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)", marginRight: 6 }}>TREES</span>
+              <span style={{ fontWeight: 800, fontSize: 19 }}>{inCount}</span>
+              {bordCount > 0 && <span style={{ fontSize: 13, color: "var(--amber)", marginLeft: 4 }}>+{bordCount}½</span>}
             </div>
           </div>
-          <button className="btn small ghost" onClick={undo} disabled={trees.length === 0}>
+          <button
+            className="btn small ghost"
+            onClick={undo}
+            disabled={trees.length === 0}
+            style={{ background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.16)", color: "#fff", fontSize: 19 }}
+          >
             ↶
           </button>
         </div>
@@ -174,14 +194,15 @@ export function SweepScreen() {
         )}
 
         {needsPermission && !active && (
-          <button className="btn ghost" style={{ marginBottom: 10 }} onClick={startMotion}>
+          <button className="btn ghost" style={{ marginBottom: 10, color: "var(--acc)", borderColor: "rgba(67,217,163,0.4)" }} onClick={startMotion}>
             {t("enableMotion")}
           </button>
         )}
 
         {ready && <div className="align-hint">{t("alignTrunk")}</div>}
 
-        <div className="seg species-seg">
+        {/* Species chips */}
+        <div className="species-seg">
           {TREE_SPECIES.map((s) => (
             <button
               key={s}
@@ -193,23 +214,30 @@ export function SweepScreen() {
           ))}
         </div>
 
+        {/* IN / BORD / OUT */}
         <div className="call-buttons">
           <button className="call-out" onClick={() => call("out")}>
-            {t("out")}
+            <span className="call-label">{t("out")}</span>
             <span className="hint">{t("outHint")}</span>
           </button>
           <button className="call-bord" onClick={() => call("borderline")}>
-            {t("borderline")}
+            <span className="call-label">{t("borderline")}</span>
             <span className="hint">{t("bordHint")}</span>
           </button>
           <button className="call-in" onClick={() => call("in")}>
-            {t("in")}
+            <span className="call-label">{t("in")}</span>
             <span className="hint">{t("inHint")}</span>
           </button>
         </div>
 
-        <button className="btn primary" onClick={finish}>
-          {t("finishSweep")} · {(baf * (inCount + bordCount / 2)).toFixed(1)} m²/ha
+        {/* Finish sweep */}
+        <button
+          className="btn primary"
+          onClick={finish}
+          style={{ borderRadius: 16, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
+        >
+          {t("finishSweep")}
+          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: "var(--acc)" }}>{liveBA} m²/ha</span>
         </button>
       </div>
 
@@ -235,11 +263,6 @@ export function SweepScreen() {
   );
 }
 
-/**
- * Resolve a borderline tree by measured distance + DBH against the BAF limiting
- * distance (PRD §5.2). Sharper than eyeballing the bar, and the entered DBH also
- * feeds stems/ha and mean-diameter estimates.
- */
 function BorderlineConfirm({
   baf,
   onResolve,
@@ -281,7 +304,7 @@ function BorderlineConfirm({
           <p className="muted" style={{ fontSize: 13 }}>
             {t("limitDistance")}: ≤ {limit.toFixed(1)} m
             {isIn !== null && (
-              <strong style={{ color: isIn ? "var(--green)" : "#94a3b8", marginLeft: 8 }}>
+              <strong style={{ color: isIn ? "var(--acc)" : "#94a3b8", marginLeft: 8 }}>
                 → {isIn ? t("resolveIn") : t("resolveOut")}
               </strong>
             )}
