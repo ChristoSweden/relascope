@@ -115,7 +115,7 @@ describe("guided measure wizard", () => {
       await renderAt("/measure");
       const buttons = [...container!.querySelectorAll("button")];
       expect(text()).toMatch(/only to measure the tree/i); // the transparency note
-      expect(text()).toMatch(/stays on your phone/i);
+      expect(text()).toMatch(/never leave your phone/i);
       expect(buttons.some((b) => /Turn on the tilt sensor/i.test(b.textContent ?? ""))).toBe(true);
       // The measure action is gated until the user grants permission.
       expect(buttons.some((b) => /Measure the bottom/i.test(b.textContent ?? ""))).toBe(false);
