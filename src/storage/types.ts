@@ -53,6 +53,8 @@ export interface Settings {
   lastCheckAt: string | null;
   language: Language;
   units: Units;
+  /** Standing-timber price (SEK/m³) for the rough stand value estimate. */
+  timberPriceSekPerM3: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lastCheckAt: null,
   language: "en",
   units: "metric",
+  timberPriceSekPerM3: 400, // conservative round figure for standing timber; owner-adjustable
 };
 
 export const BAF_PRESETS = [1, 2, 4] as const;

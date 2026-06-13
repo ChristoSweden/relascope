@@ -257,6 +257,11 @@ const en: Dict = {
   beetleRiskBody:
     "Spruce is the bark beetle's preferred host. BeetleSense watches spruce-heavy stands like this from space and warns you of an outbreak before the damage spreads.",
   beetleRiskCta: "See how BeetleSense protects spruce",
+  // Standing timber value (SEK)
+  timberValueTitle: "Standing timber value",
+  timberValueUnit: "SEK/ha",
+  timberValueNote: "Rough estimate at {price} SEK/m³ · tap to change",
+  timberPricePrompt: "Standing-timber price in SEK per m³ (used for the value estimate).",
 };
 
 const sv: Dict = {
@@ -510,6 +515,11 @@ const sv: Dict = {
   beetleRiskBody:
     "Granen är granbarkborrens favoritvärd. BeetleSense bevakar granrika bestånd som detta från rymden och varnar dig för ett angrepp innan skadan sprids.",
   beetleRiskCta: "Se hur BeetleSense skyddar gran",
+  // Stående virkesvärde (kr)
+  timberValueTitle: "Stående virkesvärde",
+  timberValueUnit: "kr/ha",
+  timberValueNote: "Grov uppskattning vid {price} kr/m³ · tryck för att ändra",
+  timberPricePrompt: "Virkespris för stående skog i kr per m³ (används för värdeuppskattningen).",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };

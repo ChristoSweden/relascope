@@ -523,6 +523,45 @@ textarea { min-height: 88px; }
 .bs-hook--risk .bs-hook-brand,
 .bs-hook--risk .bs-hook-cta { color: var(--amber); }
 
+/* Standing timber value card (tap to adjust price) */
+.value-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(67,217,163,0.22);
+  background: linear-gradient(180deg, rgba(67,217,163,0.06), rgba(67,217,163,0.015));
+  border-radius: 18px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.value-card:active { transform: scale(0.985); }
+.value-card-label {
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.value-card-number {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--acc);
+}
+.value-card-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.value-card-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
 .bs-hook-head {
   display: flex;
   align-items: center;

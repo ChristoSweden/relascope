@@ -84,6 +84,9 @@ describe("screen render smoke tests", () => {
     expect(text).toContain("Spruce");
     // V = 0.5 × 5 × 22 = 55 m³/ha
     expect(text).toContain("55");
+    // Standing value: 55 m³/ha × 400 SEK/m³ = 22,000 SEK/ha
+    expect(text).toContain("22,000");
+    expect(text).toContain("SEK/ha");
   });
 
   it("report renders the summary and method note", () => {
