@@ -71,3 +71,12 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export const BAF_PRESETS = [1, 2, 4] as const;
+
+/** A single guided tree measurement saved from the measure wizard. */
+export interface TreeMeasurement {
+  id: string;
+  createdAt: string; // ISO timestamp
+  heightM: number;
+  dbhCm: number | null;
+  woodVolumeM3: number | null;
+}

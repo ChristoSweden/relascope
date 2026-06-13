@@ -11,20 +11,14 @@ import {
   stemVolumeM3,
 } from "../../domain/relascope";
 import { EdgeMarkerOverlay, useEdgeMarkers } from "../components/EdgeMarkers";
+import { newId } from "../../storage/store";
 
 const DEG = Math.PI / 180;
 
 type Step = "base" | "top" | "result" | "thick";
 
-/**
- * Guided single-tree measurement for first-time, non-forestry users: one camera
- * step at a time, plain language, one big button per screen. The hero path —
- * aim at the base, aim at the top — needs no calibration and no diameter (the
- * tilt sensor ranges distance off the user's eye height). Thickness + wood
- * volume are an optional follow-on. Built on the same domain geometry as before.
- */
 export function MeasureScreen() {
-  const { settings, t } = useApp();
+  const { settings, saveMeasurement, t } = useApp();
   const navigate = useNavigate();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const { videoRef, start, stop, error, ready, frame } = useCamera();
@@ -38,12 +32,28 @@ export function MeasureScreen() {
   const [baseAngle, setBaseAngle] = useState<number | null>(null);
   const [heightM, setHeightM] = useState<number | null>(null);
   const [dbhCm, setDbhCm] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     start();
     return () => stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-save when height result is ready
+  useEffect(() => {
+    if (step === "result" && heightM !== null && !saved) {
+      saveMeasurement({
+        id: newId(),
+        createdAt: new Date().toISOString(),
+        heightM,
+        dbhCm: dbhCm ?? null,
+        woodVolumeM3: woodVolumeM3 ?? null,
+      });
+      setSaved(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, heightM, dbhCm, saved]);
 
   const pitch = active && pitchDeg !== null ? pitchDeg : 0;
 
@@ -62,10 +72,9 @@ export function MeasureScreen() {
     return frameWidthToAngleDeg(span, settings.hfovDeg, frame.width);
   };
 
-  // Step 1: aim at the base. Range distance off eye height; capture base angle.
   const measureBase = () => {
     if (pitchDeg === null) return;
-    const d = distanceFromEyeHeightM(settings.eyeHeightM, -pitchDeg); // base below eye
+    const d = distanceFromEyeHeightM(settings.eyeHeightM, -pitchDeg);
     if (d <= 0) {
       setErr(t("errAimLower"));
       return;
@@ -77,7 +86,6 @@ export function MeasureScreen() {
     setStep("top");
   };
 
-  // Step 2: aim at the top. Compute height.
   const measureTop = () => {
     if (pitchDeg === null || distanceM === null || baseAngle === null) return;
     const h = treeHeightM(distanceM, baseAngle, pitchDeg);
@@ -91,13 +99,13 @@ export function MeasureScreen() {
     setStep("result");
   };
 
-  // Optional: thickness at chest height → wood volume.
   const measureThickness = () => {
     if (distanceM === null) return;
     const angle = currentAngleDeg();
     if (angle <= 0) return;
     setDbhCm(diameterFromAngleCm(angle, distanceM / Math.cos(pitch * DEG)));
     if (navigator.vibrate) navigator.vibrate(25);
+    setSaved(false); // re-save with thickness
     setStep("result");
   };
 
@@ -112,6 +120,7 @@ export function MeasureScreen() {
     setHeightM(null);
     setDbhCm(null);
     setErr(null);
+    setSaved(false);
     resetMarkers();
     setStep("base");
   };
@@ -127,46 +136,60 @@ export function MeasureScreen() {
     );
   }
 
-  // ---- Result screen (plain, big numbers, no camera) ----
+  // ---- Result screen ----
   if (step === "result") {
     return (
       <div className="content stack" style={{ minHeight: "100dvh", justifyContent: "center" }}>
         <div className="result-hero">
-          <div style={{ fontSize: 52 }}>🌲</div>
-          <h2 style={{ margin: "6px 0 14px", fontSize: 24 }}>{t("resultTitle")}</h2>
+          <div className="tree-icon">🌲</div>
+          <div className="result-label">{t("resultTitle")}</div>
           <div className="result-number">
-            {heightM !== null ? heightM.toFixed(1) : "—"} <span className="result-unit">m {t("resultTall")}</span>
+            {heightM !== null ? heightM.toFixed(1) : "—"}
+            <span className="result-unit">m {t("resultTall")}</span>
           </div>
-          {dbhCm !== null && (
-            <div className="result-sub" style={{ marginTop: 14 }}>
-              {t("thickResult")}: <strong>{dbhCm.toFixed(0)} cm</strong>
-              {woodVolumeM3 !== null && (
-                <>
-                  {" · "}
-                  {t("woodVolume")}: <strong>{woodVolumeM3.toFixed(2)} m³</strong>
-                </>
-              )}
+          {saved && (
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: "var(--acc)", marginTop: 10, textTransform: "uppercase" }}>
+              ✓ Saved
             </div>
           )}
         </div>
 
-        {dbhCm === null && (
-          <button className="btn" onClick={() => { setErr(null); setStep("thick"); }}>
-            {t("addThickness")}
-          </button>
+        {dbhCm !== null && (
+          <div className="result-tiles">
+            <div className="result-tile">
+              <div className="rt-val">{dbhCm.toFixed(0)}<span className="rt-unit"> cm</span></div>
+              <div className="rt-label">{t("thickResult")}</div>
+            </div>
+            {woodVolumeM3 !== null && (
+              <div className="result-tile">
+                <div className="rt-val">{woodVolumeM3.toFixed(2)}<span className="rt-unit"> m³</span></div>
+                <div className="rt-label">{t("woodVolume")}</div>
+              </div>
+            )}
+          </div>
         )}
-        <button className="btn primary" onClick={startOver}>
-          {t("measureAnother")}
-        </button>
+
+        <div className="stack">
+          {dbhCm === null && (
+            <button className="btn" onClick={() => { setErr(null); setSaved(false); setStep("thick"); }}>
+              {t("addThickness")}
+            </button>
+          )}
+          <button className="btn primary" onClick={startOver}>
+            {t("measureAnother")}
+          </button>
+          <button className="btn ghost" onClick={() => navigate("/")}>
+            {t("finishDone")}
+          </button>
+        </div>
+
+        {/* Feedback nudge */}
         <a
-          className="btn ghost"
           href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+          style={{ display: "block", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 10.5, letterSpacing: "0.08em", color: "var(--muted)", textDecoration: "none", paddingTop: 4 }}
         >
-          ✉ {t("feedback")}
+          📬 {t("feedbackNudge")}
         </a>
-        <button className="btn ghost" onClick={() => navigate("/")}>
-          {t("finishDone")}
-        </button>
       </div>
     );
   }
@@ -193,7 +216,12 @@ export function MeasureScreen() {
       </div>
 
       <div className="sweep-hud">
-        <button className="btn small ghost" onClick={() => navigate("/")} aria-label={t("back")}>
+        <button
+          className="btn small ghost"
+          onClick={() => navigate("/")}
+          aria-label={t("back")}
+          style={{ backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.18)", color: "#fff" }}
+        >
           ✕
         </button>
       </div>
@@ -205,12 +233,22 @@ export function MeasureScreen() {
         {err && <p className="inline-err">{err}</p>}
 
         {!active && needsPermission ? (
-          <>
-            <p className="step-hint">{t("iosSensorNote")}</p>
+          <div>
+            {/* Bullet-point trust signals for iOS sensor */}
+            <div style={{ background: "rgba(67,217,163,0.08)", border: "1px solid rgba(67,217,163,0.22)", borderRadius: 14, padding: "12px 14px", marginBottom: 12 }}>
+              {[t("iosSensorBullet1"), t("iosSensorBullet2")].map((line) => (
+                <div key={line} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 6 }}>
+                  <span style={{ color: "var(--acc)", flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 14, color: "#cfeede", lineHeight: 1.35 }}>{line}</span>
+                </div>
+              ))}
+            </div>
+            {/* Full transparency note — kept for e2e test assertions */}
+            <p className="step-hint" style={{ fontSize: 13, marginBottom: 14 }}>{t("iosSensorNote")}</p>
             <button className="btn primary big-cta" onClick={startMotion}>
               {t("mTurnOn")}
             </button>
-          </>
+          </div>
         ) : (
           <button className="btn primary big-cta" onClick={stepConfig.onTap}>
             {stepConfig.btn}
@@ -218,7 +256,7 @@ export function MeasureScreen() {
         )}
 
         {step === "thick" && !settings.calibrated && (
-          <p className="step-hint" style={{ fontSize: 15, margin: "12px 0 0" }}>
+          <p className="step-hint" style={{ fontSize: 14, margin: "12px 0 0" }}>
             {t("thickCalibNote")}{" "}
             <button
               className="btn small ghost"

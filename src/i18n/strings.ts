@@ -220,6 +220,13 @@ const en: Dict = {
     "On iPhone, tap below to allow the motion (tilt) sensor. The app uses it — and the camera — only to measure the tree. Your camera view and measurements never leave your phone; only anonymous usage stats are collected.",
   privacyNote:
     "Your camera view and measurements never leave your phone. The app only collects anonymous, cookie-free usage stats (like page visits) to help improve it.",
+  // Measurement history
+  recentMeasurements: "Recent tree measurements",
+  deleteMeasurement: "Delete",
+  feedbackNudge: "Did this work in your forest? We'd love to know →",
+  iosSensorBullet1: "Used only while you measure — off when done",
+  iosSensorBullet2: "Reads angle to the treetop, not your location",
+  setHeightForVolume: "Tap to set height for volume",
 };
 
 const sv: Dict = {
@@ -437,6 +444,12 @@ const sv: Dict = {
     "På iPhone, tryck nedan för att tillåta rörelsesensorn (lutning). Appen använder den — och kameran — bara för att mäta trädet. Din kamerabild och dina mätningar lämnar aldrig telefonen; endast anonym användningsstatistik samlas in.",
   privacyNote:
     "Din kamerabild och dina mätningar lämnar aldrig telefonen. Appen samlar bara in anonym, kakfri användningsstatistik (som sidvisningar) för att bli bättre.",
+  recentMeasurements: "Senaste trädmätningar",
+  deleteMeasurement: "Ta bort",
+  feedbackNudge: "Fungerade det i din skog? Vi vill gärna veta →",
+  iosSensorBullet1: "Används bara medan du mäter — stängs av när du är klar",
+  iosSensorBullet2: "Läser vinkel till toppen, inte din position",
+  setHeightForVolume: "Tryck för att ange höjd för volym",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };

@@ -35,7 +35,11 @@ export function SettingsScreen() {
     <>
       <TopBar title={t("settings")} />
       <div className="content stack">
+
+        {/* Preferences card */}
         <div className="card stack">
+          <div className="section-label" style={{ marginBottom: 4 }}>Preferences</div>
+
           <div>
             <label className="field">{t("language")}</label>
             <div className="seg">
@@ -150,7 +154,9 @@ export function SettingsScreen() {
           </div>
         </div>
 
+        {/* Calibration card */}
         <div className="card stack">
+          <div className="section-label" style={{ marginBottom: 4 }}>Camera calibration</div>
           <div className="metric">
             <span>{t("calibration")}</span>
             <span className="value" style={{ fontSize: 18 }}>
@@ -162,20 +168,17 @@ export function SettingsScreen() {
           </div>
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
             {settings.lastCheckAt
-              ? `${t("lastVerified")}: ${new Date(settings.lastCheckAt).toLocaleDateString()} · ${t("baBias")} ${
-                  settings.lastCheckBiasPct ?? 0
-                }%`
+              ? `${t("lastVerified")}: ${new Date(settings.lastCheckAt).toLocaleDateString()} · ${t("baBias")} ${settings.lastCheckBiasPct ?? 0}%`
               : t("neverVerified")}
           </p>
-          <Link to="/verify" className="btn ghost">
+          <Link to="/verify" className="btn ghost" style={{ justifyContent: "flex-start" }}>
             {t("verifyCalibration")}
           </Link>
         </div>
 
+        {/* Backup card */}
         <div className="card stack">
-          <label className="field" style={{ marginBottom: 0 }}>
-            {t("backup")}
-          </label>
+          <div className="section-label" style={{ marginBottom: 4 }}>{t("backup")}</div>
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
             {t("backupHelp")}
           </p>
@@ -196,10 +199,9 @@ export function SettingsScreen() {
           {restoreMsg === "invalid" && <div className="banner warn">{t("restoreInvalid")}</div>}
         </div>
 
+        {/* Feedback card */}
         <div className="card stack">
-          <label className="field" style={{ marginBottom: 0 }}>
-            {t("feedback")}
-          </label>
+          <div className="section-label" style={{ marginBottom: 4 }}>{t("feedback")}</div>
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
             {t("feedbackHelp")}
           </p>
@@ -207,11 +209,11 @@ export function SettingsScreen() {
             className="btn"
             href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
           >
-            {t("feedback")}
+            ✉ {t("feedback")}
           </a>
         </div>
 
-        <p className="muted" style={{ fontSize: 13, textAlign: "center" }}>
+        <p className="muted" style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.1em", textAlign: "center", textTransform: "uppercase" }}>
           ✓ {t("offlineReady")}
         </p>
       </div>

@@ -12,6 +12,12 @@ import { standToCsv, downloadText } from "../../storage/export";
 import { TopBar } from "../components/TopBar";
 import { speciesKey } from "../../i18n/strings";
 
+const SPECIES_COLORS: Record<string, string> = {
+  pine:      "var(--acc)",
+  spruce:    "#2a9d77",
+  deciduous: "var(--amber)",
+};
+
 export function StandScreen() {
   const { standId } = useParams();
   const { stands, upsertStand, deleteStand, t } = useApp();
@@ -34,6 +40,21 @@ export function StandScreen() {
   );
   const species = aggregateSpecies(stand.points);
   const volume = estimateVolumePerHa(agg.meanBasalAreaPerHa, stand.meanHeightM);
+
+  // Estimate stems/ha and mean DBH for the metric tiles (use 24cm default if no DBH data)
+  const allPoints = stand.points.map((p) => computePointMetrics(p.trees, p.baf, p.borderlinePolicy));
+  const dbhPoints = allPoints.filter((m) => m.hasDiameterEstimates && m.meanDbhCm != null);
+  const meanDbhCm = dbhPoints.length > 0
+    ? dbhPoints.reduce((s, m) => s + m.meanDbhCm!, 0) / dbhPoints.length
+    : 24;
+  const baTree = Math.PI * Math.pow(meanDbhCm / 200, 2);
+  const stemsHa = baTree > 0 ? Math.round(agg.meanBasalAreaPerHa / baTree) : null;
+
+  const cvPct = agg.coefficientOfVariationPct;
+  const needMore = cvPct > 20;
+  const recTxt = needMore
+    ? t("suggestMorePoints", { n: agg.suggestedAdditionalPoints })
+    : t("spreadOk");
 
   const removePoint = (pointId: string) => {
     if (!confirm(t("deletePointConfirm"))) return;
@@ -80,142 +101,186 @@ export function StandScreen() {
         }
       />
       <div className="content stack">
+
         {stand.points.length > 0 && (
-          <div className="card">
-            <div className="metric">
-              <span>{t("meanWithSpread")}</span>
-              <span className="value">
-                {agg.meanBasalAreaPerHa.toFixed(1)} <span className="unit">m²/ha</span>
-              </span>
-            </div>
-            <div className="metric">
-              <span>± SE</span>
-              <span className="value">
-                {agg.standardError.toFixed(1)} <span className="unit">m²/ha</span>
-              </span>
-            </div>
-            <div className="metric">
-              <span>{t("coefficientOfVariation")}</span>
-              <span className="value">
-                {agg.coefficientOfVariationPct.toFixed(0)}
-                <span className="unit">%</span>
-              </span>
-            </div>
-            {species.hasSpecies && (
-              <div className="metric">
-                <span>{t("species")}</span>
-                <span className="value" style={{ fontSize: 16 }}>
-                  {TREE_SPECIES.filter((s) => species.sharePct[s] > 0)
-                    .map((s) => `${t(speciesKey(s))} ${Math.round(species.sharePct[s])}%`)
-                    .join(" · ")}
-                  {species.unspecifiedSharePct >= 0.5
-                    ? ` · ${t("speciesUnspecified")} ${Math.round(species.unspecifiedSharePct)}%`
-                    : ""}
-                </span>
+          <>
+            {/* Hero card: basal area */}
+            <div className="hero-card">
+              <div className="hero-label">
+                Basal area · mean of {stand.points.length} point{stand.points.length !== 1 ? "s" : ""}
               </div>
-            )}
-            <div className="metric">
-              <span>
-                {t("volumePerHa")} <span className="tag estimate">{t("estimate")}</span>
-              </span>
-              <span className="value" style={{ fontSize: 18 }}>
+              <div className="hero-number">
+                {agg.meanBasalAreaPerHa.toFixed(1)}
+                <span className="hero-unit">m²/ha</span>
+              </div>
+              <div className="hero-sub">
+                ±{agg.standardError.toFixed(1)} standard error · CV {cvPct.toFixed(0)}%
+              </div>
+            </div>
+
+            {/* Metric tiles */}
+            <div className="metric-tiles">
+              <div className="metric-tile">
+                <div className="tile-value">{stemsHa ?? "—"}</div>
+                <div className="tile-label">stems/ha</div>
+                <div className="tile-tag">estimate</div>
+              </div>
+              <div className="metric-tile">
+                <div className="tile-value">{meanDbhCm.toFixed(0)}<span className="tile-unit"> cm</span></div>
+                <div className="tile-label">mean ø</div>
+                <div className="tile-tag">estimate</div>
+              </div>
+              <button
+                className="metric-tile"
+                onClick={volume === null ? editMeanHeight : undefined}
+                style={{ textAlign: "left", cursor: volume === null ? "pointer" : "default", background: volume === null ? "rgba(67,217,163,0.05)" : undefined, borderColor: volume === null ? "rgba(67,217,163,0.3)" : undefined }}
+              >
                 {volume !== null ? (
                   <>
-                    {Math.round(volume)} <span className="unit">m³/ha</span>{" "}
+                    <div className="tile-value">{Math.round(volume)}</div>
+                    <div className="tile-label">m³/ha vol</div>
+                    <div className="tile-tag">estimate</div>
                   </>
                 ) : (
-                  "— "
+                  <>
+                    <div style={{ fontSize: 13, color: "var(--acc)", fontWeight: 600, marginBottom: 2 }}>+ {t("meanHeight")}</div>
+                    <div className="tile-label">m³/ha vol</div>
+                    <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, lineHeight: 1.3 }}>{t("setHeightForVolume")}</div>
+                  </>
                 )}
-                <button className="btn small ghost" onClick={editMeanHeight} aria-label={t("setMeanHeight")}>
-                  {stand.meanHeightM ? `${t("meanHeight")} ${stand.meanHeightM} m ✎` : `+ ${t("meanHeight")}`}
-                </button>{" "}
-                <button
-                  className="btn small ghost"
-                  onClick={() => navigate(`/stand/${stand.id}/height`)}
-                  aria-label={t("heightTool")}
-                >
+              </button>
+            </div>
+
+            {/* Height tool shortcut (only visible if height set, to allow editing) */}
+            {stand.meanHeightM != null && (
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn small ghost" onClick={editMeanHeight} style={{ flex: 1 }}>
+                  {t("meanHeight")} {stand.meanHeightM} m ✎
+                </button>
+                <button className="btn small ghost" onClick={() => navigate(`/stand/${stand.id}/height`)} style={{ flex: 1 }}>
                   📐 {t("heightTool")}
                 </button>
-              </span>
+              </div>
+            )}
+
+            {/* Species mix bar */}
+            {species.hasSpecies && (
+              <div className="mix-card">
+                <div className="section-label">Species mix · share of basal area</div>
+                <div className="mix-bar">
+                  {TREE_SPECIES.filter((s) => species.sharePct[s] > 0).map((s) => (
+                    <div
+                      key={s}
+                      style={{ width: `${species.sharePct[s]}%`, background: SPECIES_COLORS[s] ?? "var(--muted)" }}
+                    />
+                  ))}
+                  {species.unspecifiedSharePct >= 0.5 && (
+                    <div style={{ flex: 1, background: "var(--line2)" }} />
+                  )}
+                </div>
+                <div className="mix-legend">
+                  {TREE_SPECIES.filter((s) => species.sharePct[s] > 0).map((s) => (
+                    <span key={s}>
+                      <span className="mix-swatch" style={{ background: SPECIES_COLORS[s] ?? "var(--muted)" }} />
+                      {t(speciesKey(s))} {Math.round(species.sharePct[s])}%
+                    </span>
+                  ))}
+                  {species.unspecifiedSharePct >= 0.5 && (
+                    <span>
+                      <span className="mix-swatch" style={{ background: "var(--line2)" }} />
+                      {t("speciesUnspecified")} {Math.round(species.unspecifiedSharePct)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* CV / spread card */}
+            <div className="rec-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                <div>
+                  <div className="section-label" style={{ marginBottom: 2 }}>Variation (CV)</div>
+                  <div style={{ fontSize: 26, fontWeight: 800 }}>{cvPct.toFixed(0)}%</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="section-label" style={{ marginBottom: 2 }}>Points</div>
+                  <div style={{ fontSize: 26, fontWeight: 800 }}>{stand.points.length}</div>
+                </div>
+              </div>
+              <div className={`rec-banner ${needMore ? "warn" : "ok"}`}>{recTxt}</div>
             </div>
-            <p className="muted" style={{ margin: "10px 0 0", fontSize: 14 }}>
-              {agg.suggestedAdditionalPoints > 0
-                ? t("suggestMorePoints", { n: agg.suggestedAdditionalPoints })
-                : t("spreadOk")}
-            </p>
-          </div>
+          </>
         )}
 
         <button className="btn primary" onClick={() => navigate(`/stand/${stand.id}/sweep`)}>
           + {t("addPoint")}
         </button>
 
-        <h2 style={{ fontSize: 16, marginBottom: 0 }}>{t("points")}</h2>
-        {stand.points.length === 0 && <p className="muted">{t("noPoints")}</p>}
-
-        <div className="stack">
-          {stand.points.map((p, i) => {
-            const m = computePointMetrics(p.trees, p.baf, p.borderlinePolicy);
-            return (
-              <div key={p.id} className="card">
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <strong>
-                    #{i + 1} · {t("baf")} {p.baf}
-                  </strong>
-                  <div className="row" style={{ gap: 8 }}>
-                    <button
-                      className="btn small ghost"
-                      onClick={() => editNotes(p.id)}
-                      aria-label={t("editNotes")}
-                    >
-                      ✎
-                    </button>
-                    <button className="btn small danger" onClick={() => removePoint(p.id)}>
-                      {t("delete")}
-                    </button>
-                  </div>
-                </div>
-                <div className="metric">
-                  <span>
-                    {t("basalAreaPerHa")} <span className="tag measured">{t("measured")}</span>
-                  </span>
-                  <span className="value">
-                    {m.basalAreaPerHa.toFixed(1)} <span className="unit">m²/ha</span>
-                  </span>
-                </div>
-                {m.hasDiameterEstimates && (
-                  <>
-                    <div className="metric">
-                      <span>
-                        {t("stemsPerHa")} <span className="tag estimate">{t("estimate")}</span>
-                      </span>
-                      <span className="value">{Math.round(m.stemsPerHa!)}</span>
+        {/* Individual sweep points */}
+        {stand.points.length > 0 && (
+          <>
+            <div className="section-label" style={{ marginTop: 4 }}>{t("points")}</div>
+            <div className="stack">
+              {stand.points.map((p, i) => {
+                const m = computePointMetrics(p.trees, p.baf, p.borderlinePolicy);
+                return (
+                  <div key={p.id} className="card">
+                    <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
+                      <strong>
+                        #{i + 1} · {t("baf")} {p.baf}
+                      </strong>
+                      <div className="row" style={{ gap: 8 }}>
+                        <button
+                          className="btn small ghost"
+                          onClick={() => editNotes(p.id)}
+                          aria-label={t("editNotes")}
+                        >
+                          ✎
+                        </button>
+                        <button className="btn small danger" onClick={() => removePoint(p.id)}>
+                          {t("delete")}
+                        </button>
+                      </div>
                     </div>
                     <div className="metric">
                       <span>
-                        {t("meanDbh")} <span className="tag estimate">{t("estimate")}</span>
+                        {t("basalAreaPerHa")} <span className="tag measured">{t("measured")}</span>
                       </span>
                       <span className="value">
-                        {m.meanDbhCm!.toFixed(0)} <span className="unit">cm</span>
+                        {m.basalAreaPerHa.toFixed(1)} <span className="unit">m²/ha</span>
                       </span>
                     </div>
-                  </>
-                )}
-                <p className="muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
-                  {m.inCount} IN · {m.borderlineCount} {t("borderline")} · {m.outCount} OUT
-                  {p.lat !== null
-                    ? ` · ${p.lat.toFixed(5)}, ${p.lng!.toFixed(5)}`
-                    : ` · ${t("gpsUnavailable")}`}
-                </p>
-                {p.notes && (
-                  <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>
-                    “{p.notes}”
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                    {m.hasDiameterEstimates && (
+                      <>
+                        <div className="metric">
+                          <span>{t("stemsPerHa")} <span className="tag estimate">{t("estimate")}</span></span>
+                          <span className="value">{Math.round(m.stemsPerHa!)}</span>
+                        </div>
+                        <div className="metric">
+                          <span>{t("meanDbh")} <span className="tag estimate">{t("estimate")}</span></span>
+                          <span className="value">{m.meanDbhCm!.toFixed(0)} <span className="unit">cm</span></span>
+                        </div>
+                      </>
+                    )}
+                    <p className="muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+                      {m.inCount} IN · {m.borderlineCount} {t("borderline")} · {m.outCount} OUT
+                      {p.lat !== null
+                        ? ` · ${p.lat.toFixed(5)}, ${p.lng!.toFixed(5)}`
+                        : ` · ${t("gpsUnavailable")}`}
+                    </p>
+                    {p.notes && (
+                      <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>
+                        "{p.notes}"
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {stand.points.length === 0 && <p className="muted">{t("noPoints")}</p>}
 
         {stand.points.length > 0 && (
           <>
@@ -230,6 +295,7 @@ export function StandScreen() {
             </button>
           </>
         )}
+
         <button className="btn danger ghost" onClick={removeStand}>
           {t("delete")} {stand.name}
         </button>
