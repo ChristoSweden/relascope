@@ -21,6 +21,15 @@ import {
   estimateVolumePerHa,
   STAND_FORM_FACTOR,
   treeHeightM,
+  markerSpanFramePx,
+  trunkSlantRangeM,
+  diameterFromAngleCm,
+  horizontalDistanceM,
+  distanceFromEyeHeightM,
+  stemHeightAtAngleM,
+  sectionAreaM2,
+  stemVolumeM3,
+  breastHeightFormFactor,
   type TreeObservation,
 } from "./relascope";
 
@@ -380,5 +389,110 @@ describe("tree height by clinometer", () => {
     expect(treeHeightM(0, -5, 30)).toBeNull(); // no distance
     expect(treeHeightM(20, 30, -5)).toBeNull(); // top below base
     expect(treeHeightM(20, -5, 88)).toBeNull(); // tan blow-up guard
+  });
+});
+
+describe("marker span (shared by calibration and measurement)", () => {
+  it("undoes the cover scale to native frame pixels", () => {
+    const scale = coverDisplayScale(1920, 1080, 390, 844);
+    const span = markerSpanFramePx({
+      leftFrac: 0.3,
+      rightFrac: 0.7,
+      stageWidthPx: 390,
+      stageHeightPx: 844,
+      frameWidthPx: 1920,
+      frameHeightPx: 1080,
+    });
+    expect(span).toBeCloseTo((0.4 * 390) / scale, 4);
+  });
+
+  it("round-trips through the pinhole angle helpers", () => {
+    const span = markerSpanFramePx({
+      leftFrac: 0.4,
+      rightFrac: 0.6,
+      stageWidthPx: 1920,
+      stageHeightPx: 1080,
+      frameWidthPx: 1920,
+      frameHeightPx: 1080,
+    });
+    expect(span).toBeCloseTo(0.2 * 1920, 4);
+    const angle = frameWidthToAngleDeg(span, 65, 1920);
+    expect(angleToFrameWidthPx(angle, 65, 1920)).toBeCloseTo(span, 4);
+  });
+});
+
+describe("trunk ranging and upper-stem diameter (round-trunk sine model)", () => {
+  it("ranges off a known DBH like a relascope off a staff", () => {
+    const alpha = (2 * Math.asin(0.2 / 10) * 180) / Math.PI; // 40 cm trunk at 10 m
+    expect(trunkSlantRangeM(40, alpha)).toBeCloseTo(10, 6);
+  });
+
+  it("recovers diameter at a slant range (exact inverse)", () => {
+    const alpha = (2 * Math.asin(0.2 / 10) * 180) / Math.PI;
+    expect(diameterFromAngleCm(alpha, 10)).toBeCloseTo(40, 6);
+    const D = trunkSlantRangeM(30, 1.8);
+    expect(diameterFromAngleCm(1.8, D)).toBeCloseTo(30, 6);
+  });
+
+  it("guards non-positive inputs", () => {
+    expect(trunkSlantRangeM(0, 2)).toBe(0);
+    expect(trunkSlantRangeM(30, 0)).toBe(0);
+    expect(diameterFromAngleCm(2, 0)).toBe(0);
+  });
+
+  it("corrects slant to horizontal distance", () => {
+    expect(horizontalDistanceM(10, 0)).toBeCloseTo(10, 6);
+    expect(horizontalDistanceM(10, 30)).toBeCloseTo(10 * Math.cos(Math.PI / 6), 6);
+  });
+
+  it("ranges from eye height and base depression (no known DBH)", () => {
+    const depression = (Math.atan(1.5 / 10) * 180) / Math.PI; // 1.5 m eye, base at 10 m
+    expect(distanceFromEyeHeightM(1.5, depression)).toBeCloseTo(10, 6);
+    expect(distanceFromEyeHeightM(1.5, 0)).toBe(0);
+    expect(distanceFromEyeHeightM(0, 10)).toBe(0);
+  });
+
+  it("files an upper diameter at its true stem height", () => {
+    const h = stemHeightAtAngleM(18, -5, 25);
+    expect(h).toBeCloseTo(18 * (Math.tan((25 * Math.PI) / 180) - Math.tan((-5 * Math.PI) / 180)), 6);
+    expect(stemHeightAtAngleM(0, -5, 25)).toBe(0);
+  });
+});
+
+describe("stem volume and form factor", () => {
+  it("cross-section area is π/4·d² in m²", () => {
+    expect(sectionAreaM2(40)).toBeCloseTo(0.1257, 4);
+  });
+
+  it("integrates a perfect cylinder to area × height", () => {
+    const v = stemVolumeM3([
+      { heightM: 0, diameterCm: 40 },
+      { heightM: 10, diameterCm: 40 },
+    ]);
+    expect(v).toBeCloseTo(sectionAreaM2(40) * 10, 6);
+  });
+
+  it("adds a conic tip above the top measured diameter", () => {
+    const sections = [
+      { heightM: 1.3, diameterCm: 30 },
+      { heightM: 6, diameterCm: 20 },
+    ];
+    const withTip = stemVolumeM3(sections, 12) - stemVolumeM3(sections);
+    expect(withTip).toBeCloseTo((sectionAreaM2(20) / 3) * (12 - 6), 6);
+  });
+
+  it("orders sections and ignores empty input", () => {
+    expect(
+      stemVolumeM3([
+        { heightM: 6, diameterCm: 20 },
+        { heightM: 1.3, diameterCm: 30 },
+      ]),
+    ).toBeGreaterThan(0);
+    expect(stemVolumeM3([])).toBe(0);
+  });
+
+  it("form factor is volume over the breast-height cylinder", () => {
+    const f = breastHeightFormFactor(0.5, 30, 20);
+    expect(f).toBeCloseTo(0.5 / (sectionAreaM2(30) * 20), 6);
   });
 });

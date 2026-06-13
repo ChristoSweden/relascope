@@ -150,6 +150,31 @@ const en: Dict = {
   markTop: "Mark top",
   treeHeight: "Tree height",
   useAsMeanHeight: "Use as stand mean height",
+  measureTitle: "Measure a tree",
+  measureIntro:
+    "The relascope functions beyond basal area: distance, height, upper-stem diameter and stem volume. On level ground you don't even need the diameter — sight the base and the tilt sensor ranges it.",
+  pitch: "Tilt",
+  measureStepDistance: "1 · Distance",
+  rangeEyeHeightHelp:
+    "Level ground: aim at the tree base and tap — the tilt sensor ranges it from your {h} m eye height, no diameter needed (set eye height in Settings). Or use a known DBH / manual distance below.",
+  rangeFromBase: "Sight tree base → distance",
+  readDiameter: "Read Ø",
+  measureFromDbh: "Measure distance from DBH",
+  distanceResult: "Distance",
+  useManual: "Use",
+  measureStepHeight: "2 · Height",
+  measureStepDiameter: "3 · Upper diameter & volume",
+  measureDiameterHelp:
+    "Aim at any height up the stem, drag the markers to the trunk edges there, and add a section. Sections build a taper for the stem volume.",
+  addSection: "Add diameter here",
+  removeLast: "Remove last",
+  atHeight: "at {h} m",
+  stemVolume: "Stem volume",
+  formFactor: "Form factor",
+  newTree: "New tree",
+  eyeHeight: "Eye height (m)",
+  eyeHeightHelp:
+    "Your eye height when sighting — lets the measure tool range a tree's distance from the angle down to its base, so you can measure without knowing the diameter.",
 };
 
 const sv: Dict = {
@@ -297,6 +322,31 @@ const sv: Dict = {
   markTop: "Markera toppen",
   treeHeight: "Trädhöjd",
   useAsMeanHeight: "Använd som beståndets medelhöjd",
+  measureTitle: "Mät ett träd",
+  measureIntro:
+    "Relaskopets funktioner utöver grundyta: avstånd, höjd, stamdiameter på höjden och stamvolym. På plan mark behövs inte ens diametern — sikta på basen så mäter lutningssensorn avståndet.",
+  pitch: "Lutning",
+  measureStepDistance: "1 · Avstånd",
+  rangeEyeHeightHelp:
+    "Plan mark: sikta på trädets bas och tryck — lutningssensorn mäter avståndet från din ögonhöjd på {h} m, ingen diameter behövs (ställ in ögonhöjd i Inställningar). Eller använd känd DBH / manuellt avstånd nedan.",
+  rangeFromBase: "Sikta trädbas → avstånd",
+  readDiameter: "Läs Ø",
+  measureFromDbh: "Mät avstånd från DBH",
+  distanceResult: "Avstånd",
+  useManual: "Använd",
+  measureStepHeight: "2 · Höjd",
+  measureStepDiameter: "3 · Toppdiameter & volym",
+  measureDiameterHelp:
+    "Sikta på valfri höjd upp på stammen, dra markörerna till stamkanterna där och lägg till en sektion. Sektionerna bygger en avsmalning för stamvolymen.",
+  addSection: "Lägg till diameter här",
+  removeLast: "Ta bort senaste",
+  atHeight: "vid {h} m",
+  stemVolume: "Stamvolym",
+  formFactor: "Formtal",
+  newTree: "Nytt träd",
+  eyeHeight: "Ögonhöjd (m)",
+  eyeHeightHelp:
+    "Din ögonhöjd vid siktning — låter mätverktyget bestämma trädets avstånd från vinkeln ner till basen, så att du kan mäta utan att känna diametern.",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };

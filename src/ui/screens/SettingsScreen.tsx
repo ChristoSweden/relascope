@@ -110,6 +110,23 @@ export function SettingsScreen() {
           </div>
 
           <div>
+            <label className="field">{t("eyeHeight")}</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.05"
+              value={settings.eyeHeightM}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                if (v > 0) updateSettings({ eyeHeightM: v });
+              }}
+            />
+            <p className="muted" style={{ fontSize: 13, margin: "6px 0 0" }}>
+              {t("eyeHeightHelp")}
+            </p>
+          </div>
+
+          <div>
             <label className="field">{t("sunlightMode")}</label>
             <div className="seg">
               {(

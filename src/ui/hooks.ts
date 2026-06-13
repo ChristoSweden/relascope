@@ -188,7 +188,17 @@ export function useMotion() {
   }, [onOrientation, onMotion]);
 
   useEffect(() => {
-    if (motionNeedsPermission()) setNeedsPermission(true);
+    // iOS needs an explicit user gesture (handled by `start`); everywhere else
+    // (Android, desktop) no permission is required, so attach the listeners on
+    // mount — otherwise the compass sweep, slope sensing and clinometer pitch
+    // never run and the height tool's mark buttons stay disabled.
+    if (motionNeedsPermission()) {
+      setNeedsPermission(true);
+    } else {
+      window.addEventListener("deviceorientation", onOrientation, true);
+      window.addEventListener("devicemotion", onMotion, true);
+      setActive(true);
+    }
     return () => {
       window.removeEventListener("deviceorientation", onOrientation, true);
       window.removeEventListener("devicemotion", onMotion, true);
