@@ -158,6 +158,12 @@ export function MeasureScreen() {
         <button className="btn primary" onClick={startOver}>
           {t("measureAnother")}
         </button>
+        <a
+          className="btn ghost"
+          href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+        >
+          ✉ {t("feedback")}
+        </a>
         <button className="btn ghost" onClick={() => navigate("/")}>
           {t("finishDone")}
         </button>

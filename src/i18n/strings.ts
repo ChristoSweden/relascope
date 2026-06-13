@@ -178,7 +178,10 @@ const en: Dict = {
   // First-run welcome (plain language)
   welcomeTitle: "Measure your trees with your phone",
   welcomeBody:
-    "Point your phone at a tree and it tells you how tall it is — and roughly how much wood is in it. No tape measure needed.",
+    "Point your phone at a tree and it tells you how tall it is — and roughly how much wood is in it. No tape measure, and nothing to install.",
+  welcomeNew:
+    "It's a brand-new tool that's still being tested, so your honest feedback really helps — was it easy, and did the numbers look right?",
+  welcomeNeedLabel: "Before you start:",
   welcomeNeed1: "Stand back so you can see the whole tree, top to bottom",
   welcomeNeed2: "Works best in daylight with a clear view of the trunk",
   welcomeNeed3: "Hold your phone upright",
@@ -392,7 +395,10 @@ const sv: Dict = {
   // Första gången – välkomst (vardagsspråk)
   welcomeTitle: "Mät dina träd med mobilen",
   welcomeBody:
-    "Rikta mobilen mot ett träd så får du veta hur högt det är — och ungefär hur mycket virke det innehåller. Ingen måttsats behövs.",
+    "Rikta mobilen mot ett träd så får du veta hur högt det är — och ungefär hur mycket virke det innehåller. Ingen måttsats, inget att installera.",
+  welcomeNew:
+    "Det är ett helt nytt verktyg som fortfarande testas, så din ärliga feedback hjälper verkligen — var det enkelt, och såg siffrorna rätt ut?",
+  welcomeNeedLabel: "Innan du börjar:",
   welcomeNeed1: "Stå en bit bort så att du ser hela trädet, topp till bas",
   welcomeNeed2: "Fungerar bäst i dagsljus med fri sikt mot stammen",
   welcomeNeed3: "Håll mobilen upprätt",
