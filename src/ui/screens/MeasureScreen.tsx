@@ -199,9 +199,12 @@ export function MeasureScreen() {
         {err && <p className="inline-err">{err}</p>}
 
         {!active && needsPermission ? (
-          <button className="btn primary big-cta" onClick={startMotion}>
-            {t("mTurnOn")}
-          </button>
+          <>
+            <p className="step-hint">{t("iosSensorNote")}</p>
+            <button className="btn primary big-cta" onClick={startMotion}>
+              {t("mTurnOn")}
+            </button>
+          </>
         ) : (
           <button className="btn primary big-cta" onClick={stepConfig.onTap}>
             {stepConfig.btn}

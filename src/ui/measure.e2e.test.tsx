@@ -106,6 +106,24 @@ describe("guided measure wizard", () => {
     expect(text()).toMatch(/m³/);
   });
 
+  it("is transparent about the tilt sensor on iPhone before asking permission", async () => {
+    // Simulate iOS: DeviceOrientationEvent exposes requestPermission.
+    (globalThis as Record<string, unknown>).DeviceOrientationEvent = class {
+      static requestPermission = () => Promise.resolve("granted");
+    };
+    try {
+      await renderAt("/measure");
+      const buttons = [...container!.querySelectorAll("button")];
+      expect(text()).toMatch(/only to measure the tree/i); // the transparency note
+      expect(text()).toMatch(/stays on your phone/i);
+      expect(buttons.some((b) => /Turn on the tilt sensor/i.test(b.textContent ?? ""))).toBe(true);
+      // The measure action is gated until the user grants permission.
+      expect(buttons.some((b) => /Measure the bottom/i.test(b.textContent ?? ""))).toBe(false);
+    } finally {
+      (globalThis as Record<string, unknown>).DeviceOrientationEvent = class {}; // restore Android default
+    }
+  });
+
   it("shows a friendly error when the base sight is not below the horizon", async () => {
     await renderAt("/measure");
     orientPitch(10); // aiming up, not at the base
