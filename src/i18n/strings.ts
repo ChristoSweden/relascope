@@ -33,6 +33,8 @@ const en: Dict = {
   back: "Back",
   baf: "BAF",
   basalAreaPerHa: "Basal area / ha",
+  basalAreaPlain:
+    "Add up the trunk thickness of every tree at chest height: that's basal area. It's forestry's headline number for how much wood is standing — higher means more timber.",
   stemsPerHa: "Stems / ha",
   meanDbh: "Mean DBH",
   estimate: "estimate",
@@ -232,6 +234,17 @@ const en: Dict = {
   iosSensorBullet1: "Used only while you measure — off when done",
   iosSensorBullet2: "Reads angle to the treetop, not your location",
   setHeightForVolume: "Tap to set height for volume",
+  // Result + chrome labels (kept out of hardcoded JSX so SV stays fully Swedish)
+  notFound: "Not found.",
+  heroBasalLabel: "Basal area · mean of {n} point(s)",
+  heroSub: "±{se} standard error · CV {cv}%",
+  meanDiaTile: "mean ø",
+  volTile: "m³/ha vol",
+  homePrompt: "What do you want to do?",
+  preferences: "Preferences",
+  cameraCalibration: "Camera calibration",
+  treesShort: "TREES",
+  cmThick: "cm thick",
   // BeetleSense funnel
   bsHookTitle: "This is one tree.",
   bsHookBody:
@@ -268,6 +281,8 @@ const sv: Dict = {
   back: "Tillbaka",
   baf: "Grundyta­faktor",
   basalAreaPerHa: "Grundyta / ha",
+  basalAreaPlain:
+    "Lägg ihop stammarnas tjocklek i brösthöjd för alla träd: det är grundytan. Det är skogsbrukets nyckeltal för hur mycket virke som står — högre betyder mer virke.",
   stemsPerHa: "Stammar / ha",
   meanDbh: "Medel­diameter",
   estimate: "uppskattning",
@@ -466,6 +481,17 @@ const sv: Dict = {
   iosSensorBullet1: "Används bara medan du mäter — stängs av när du är klar",
   iosSensorBullet2: "Läser vinkel till toppen, inte din position",
   setHeightForVolume: "Tryck för att ange höjd för volym",
+  // Resultat + ramverkstexter
+  notFound: "Hittades inte.",
+  heroBasalLabel: "Grundyta · medel av {n} punkt(er)",
+  heroSub: "±{se} medelfel · CV {cv}%",
+  meanDiaTile: "medel ø",
+  volTile: "m³/ha vol",
+  homePrompt: "Vad vill du göra?",
+  preferences: "Allmänt",
+  cameraCalibration: "Kamerakalibrering",
+  treesShort: "TRÄD",
+  cmThick: "cm tjock",
   // BeetleSense funnel
   bsHookTitle: "Det här är ett träd.",
   bsHookBody:

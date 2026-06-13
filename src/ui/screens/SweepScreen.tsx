@@ -178,7 +178,7 @@ export function SweepScreen() {
               <span>{sweptPct}%</span>
             </div>
             <div className="count-pill">
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)", marginRight: 6 }}>TREES</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)", marginRight: 6 }}>{t("treesShort")}</span>
               <span style={{ fontWeight: 800, fontSize: 19 }}>{inCount}</span>
               {bordCount > 0 && <span style={{ fontSize: 13, color: "var(--amber)", marginLeft: 4 }}>+{bordCount}½</span>}
             </div>

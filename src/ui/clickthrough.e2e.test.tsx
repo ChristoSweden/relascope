@@ -128,7 +128,7 @@ describe("automated click-through — non-sensor flows", () => {
     expect(text()).toContain("9.0");
     expect(text()).toContain("m²/ha");
     expect(text()).toContain("Pine"); // species mix picked up the pine calls
-    expect(text()).toMatch(/stems\/ha/i);
+    expect(text()).toMatch(/stems\s*\/\s*ha/i);
 
     // Export CSV → the download path runs end-to-end (Blob URL created).
     clickText("Export CSV");

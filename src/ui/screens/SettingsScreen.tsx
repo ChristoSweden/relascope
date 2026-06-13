@@ -38,7 +38,7 @@ export function SettingsScreen() {
 
         {/* Preferences card */}
         <div className="card stack">
-          <div className="section-label" style={{ marginBottom: 4 }}>Preferences</div>
+          <div className="section-label" style={{ marginBottom: 4 }}>{t("preferences")}</div>
 
           <div>
             <label className="field">{t("language")}</label>
@@ -156,7 +156,7 @@ export function SettingsScreen() {
 
         {/* Calibration card */}
         <div className="card stack">
-          <div className="section-label" style={{ marginBottom: 4 }}>Camera calibration</div>
+          <div className="section-label" style={{ marginBottom: 4 }}>{t("cameraCalibration")}</div>
           <div className="metric">
             <span>{t("calibration")}</span>
             <span className="value" style={{ fontSize: 18 }}>
