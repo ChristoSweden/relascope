@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type Settings, type Stand, type SamplePoint } from "./types";
+import { DEFAULT_SETTINGS, type Settings, type Stand, type SamplePoint, type TreeMeasurement } from "./types";
 
 // Local-first storage (PRD §5.5, §6): everything lives on-device in
 // localStorage. Volumes are tiny (counts + coordinates), so JSON is plenty and
@@ -6,6 +6,7 @@ import { DEFAULT_SETTINGS, type Settings, type Stand, type SamplePoint } from ".
 
 const STANDS_KEY = "relascope.stands.v1";
 const SETTINGS_KEY = "relascope.settings.v1";
+const MEASUREMENTS_KEY = "relascope.measurements.v1";
 
 export function newId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -37,6 +38,22 @@ export function loadSettings(): Settings {
 
 export function saveSettings(settings: Settings): void {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+export function loadMeasurements(): TreeMeasurement[] {
+  return safeParse<TreeMeasurement[]>(localStorage.getItem(MEASUREMENTS_KEY), []);
+}
+
+export function saveMeasurements(measurements: TreeMeasurement[]): void {
+  localStorage.setItem(MEASUREMENTS_KEY, JSON.stringify(measurements));
+}
+
+export function prependMeasurement(measurements: TreeMeasurement[], m: TreeMeasurement): TreeMeasurement[] {
+  return [m, ...measurements].slice(0, 50);
+}
+
+export function deleteMeasurementById(measurements: TreeMeasurement[], id: string): TreeMeasurement[] {
+  return measurements.filter((m) => m.id !== id);
 }
 
 export function getStand(stands: Stand[], id: string): Stand | undefined {

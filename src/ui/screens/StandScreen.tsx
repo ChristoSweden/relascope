@@ -15,7 +15,7 @@ import { speciesKey } from "../../i18n/strings";
 const SPECIES_COLORS: Record<string, string> = {
   pine:      "var(--acc)",
   spruce:    "#2a9d77",
-  broadleaf: "var(--amber)",
+  deciduous: "var(--amber)",
 };
 
 export function StandScreen() {
@@ -130,30 +130,36 @@ export function StandScreen() {
                 <div className="tile-label">mean ø</div>
                 <div className="tile-tag">estimate</div>
               </div>
-              <div className="metric-tile">
-                <div className="tile-value">
-                  {volume !== null ? Math.round(volume) : "—"}
-                </div>
-                <div className="tile-label">m³/ha vol</div>
-                <div className="tile-tag">estimate</div>
-              </div>
+              <button
+                className="metric-tile"
+                onClick={volume === null ? editMeanHeight : undefined}
+                style={{ textAlign: "left", cursor: volume === null ? "pointer" : "default", background: volume === null ? "rgba(67,217,163,0.05)" : undefined, borderColor: volume === null ? "rgba(67,217,163,0.3)" : undefined }}
+              >
+                {volume !== null ? (
+                  <>
+                    <div className="tile-value">{Math.round(volume)}</div>
+                    <div className="tile-label">m³/ha vol</div>
+                    <div className="tile-tag">estimate</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 13, color: "var(--acc)", fontWeight: 600, marginBottom: 2 }}>+ {t("meanHeight")}</div>
+                    <div className="tile-label">m³/ha vol</div>
+                    <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, lineHeight: 1.3 }}>{t("setHeightForVolume")}</div>
+                  </>
+                )}
+              </button>
             </div>
 
-            {/* Volume / height controls */}
-            {volume === null && (
-              <div className="card" style={{ padding: "12px 14px" }}>
-                <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
-                  <button className="btn small ghost" onClick={editMeanHeight} style={{ flex: 1 }}>
-                    {stand.meanHeightM ? `${t("meanHeight")} ${stand.meanHeightM} m ✎` : `+ ${t("meanHeight")}`}
-                  </button>
-                  <button
-                    className="btn small ghost"
-                    onClick={() => navigate(`/stand/${stand.id}/height`)}
-                    style={{ flex: 1 }}
-                  >
-                    📐 {t("heightTool")}
-                  </button>
-                </div>
+            {/* Height tool shortcut (only visible if height set, to allow editing) */}
+            {stand.meanHeightM != null && (
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn small ghost" onClick={editMeanHeight} style={{ flex: 1 }}>
+                  {t("meanHeight")} {stand.meanHeightM} m ✎
+                </button>
+                <button className="btn small ghost" onClick={() => navigate(`/stand/${stand.id}/height`)} style={{ flex: 1 }}>
+                  📐 {t("heightTool")}
+                </button>
               </div>
             )}
 

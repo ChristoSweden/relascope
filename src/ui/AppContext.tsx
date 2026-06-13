@@ -7,16 +7,23 @@ import {
   saveStands,
   upsertStand as upsertStandFn,
   deleteStand as deleteStandFn,
+  loadMeasurements,
+  saveMeasurements,
+  prependMeasurement,
+  deleteMeasurementById,
 } from "../storage/store";
-import { DEFAULT_SETTINGS, type Settings, type Stand } from "../storage/types";
+import { DEFAULT_SETTINGS, type Settings, type Stand, type TreeMeasurement } from "../storage/types";
 import { detectLanguage, translate } from "../i18n/strings";
 
 interface AppState {
   stands: Stand[];
+  measurements: TreeMeasurement[];
   settings: Settings;
   upsertStand: (stand: Stand) => void;
   deleteStand: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
+  saveMeasurement: (m: TreeMeasurement) => void;
+  deleteMeasurement: (id: string) => void;
   /** Replace all on-device data at once (backup restore). */
   restoreAll: (stands: Stand[], settings: Settings) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -26,9 +33,9 @@ const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [stands, setStands] = useState<Stand[]>(() => loadStands());
+  const [measurements, setMeasurements] = useState<TreeMeasurement[]>(() => loadMeasurements());
   const [settings, setSettings] = useState<Settings>(() => {
     const loaded = loadSettings();
-    // First run: pick up the device language unless the user has set one.
     if (loaded === DEFAULT_SETTINGS || !localStorage.getItem("relascope.settings.v1")) {
       return { ...loaded, language: detectLanguage() };
     }
@@ -37,8 +44,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => saveStands(stands), [stands]);
   useEffect(() => saveSettings(settings), [settings]);
-  // Sunlight mode flips the whole theme to a high-contrast light palette, so it
-  // lives on <body> rather than inside the React tree.
+  useEffect(() => saveMeasurements(measurements), [measurements]);
   useEffect(() => {
     document.body.classList.toggle("sunlight", settings.sunlightMode);
   }, [settings.sunlightMode]);
@@ -55,6 +61,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  const saveMeasurement = useCallback((m: TreeMeasurement) => {
+    setMeasurements((prev) => prependMeasurement(prev, m));
+  }, []);
+
+  const deleteMeasurement = useCallback((id: string) => {
+    setMeasurements((prev) => deleteMeasurementById(prev, id));
+  }, []);
+
   const restoreAll = useCallback((nextStands: Stand[], nextSettings: Settings) => {
     setStands(nextStands);
     setSettings(nextSettings);
@@ -66,8 +80,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<AppState>(
-    () => ({ stands, settings, upsertStand, deleteStand, updateSettings, restoreAll, t }),
-    [stands, settings, upsertStand, deleteStand, updateSettings, restoreAll, t],
+    () => ({ stands, measurements, settings, upsertStand, deleteStand, updateSettings, saveMeasurement, deleteMeasurement, restoreAll, t }),
+    [stands, measurements, settings, upsertStand, deleteStand, updateSettings, saveMeasurement, deleteMeasurement, restoreAll, t],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

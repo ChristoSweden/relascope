@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { newId } from "../../storage/store";
 import { computePointMetrics, aggregateStand } from "../../domain/relascope";
+import type { TreeMeasurement } from "../../storage/types";
 
 const ONBOARDED_KEY = "relascope.onboarded.v1";
 
-/** Tree-height icon: vertical line + apex dot + base bar */
 function TreeHeightIcon() {
   return (
     <div style={{ position: "relative", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -18,7 +18,6 @@ function TreeHeightIcon() {
   );
 }
 
-/** Relascope compass icon: partial-arc circle */
 function RelaIcon() {
   return (
     <div style={{ position: "relative", width: 28, height: 28, borderRadius: "50%", border: "1.5px solid var(--line2)", display: "grid", placeItems: "center" }}>
@@ -28,8 +27,38 @@ function RelaIcon() {
   );
 }
 
+function MeasurementRow({ m, onDelete }: { m: TreeMeasurement; onDelete: () => void }) {
+  const date = new Date(m.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 13, padding: "12px 14px", borderRadius: 14, border: "1px solid var(--line)", background: "var(--surf)" }}>
+      <div style={{ fontSize: 22, flexShrink: 0 }}>🌲</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>
+          {m.heightM.toFixed(1)}<span style={{ fontSize: 13, fontWeight: 500, color: "var(--muted)", marginLeft: 4 }}>m tall</span>
+        </div>
+        {m.dbhCm !== null && (
+          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
+            {m.dbhCm.toFixed(0)} cm thick
+            {m.woodVolumeM3 !== null && ` · ${m.woodVolumeM3.toFixed(2)} m³`}
+          </div>
+        )}
+      </div>
+      <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: "var(--muted)", textTransform: "uppercase", marginBottom: 4 }}>{date}</div>
+        <button
+          onClick={onDelete}
+          style={{ background: "none", border: "none", color: "var(--muted)", fontSize: 13, cursor: "pointer", padding: 0 }}
+          aria-label="Delete measurement"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function HomeScreen() {
-  const { stands, upsertStand, t } = useApp();
+  const { stands, measurements, deleteMeasurement, upsertStand, t } = useApp();
   const navigate = useNavigate();
   const [onboarded, setOnboarded] = useState(
     () => localStorage.getItem(ONBOARDED_KEY) === "1" || stands.length > 0,
@@ -83,6 +112,8 @@ export function HomeScreen() {
   }
 
   // ---- Main launchpad ----
+  const recentMeasurements = measurements.slice(0, 3);
+
   return (
     <>
       {/* Header */}
@@ -122,9 +153,29 @@ export function HomeScreen() {
           <span className="cta-arrow">›</span>
         </button>
 
+        {/* Recent tree measurements */}
+        {recentMeasurements.length > 0 && (
+          <>
+            <div className="section-label" style={{ marginTop: 8 }}>{t("recentMeasurements")}</div>
+            <div className="stack" style={{ gap: 9 }}>
+              {recentMeasurements.map((m) => (
+                <MeasurementRow key={m.id} m={m} onDelete={() => deleteMeasurement(m.id)} />
+              ))}
+            </div>
+            {/* Feedback nudge appears after the user has measurements */}
+            <a
+              href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+              style={{ display: "block", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 10.5, letterSpacing: "0.08em", color: "var(--muted)", textDecoration: "none", paddingTop: 2 }}
+            >
+              📬 {t("feedbackNudge")}
+            </a>
+          </>
+        )}
+
+        {/* Saved forest areas */}
         {stands.length > 0 && (
           <>
-            <div className="section-label" style={{ marginTop: 8 }}>{t("homeSavedTitle")}</div>
+            <div className="section-label" style={{ marginTop: recentMeasurements.length > 0 ? 4 : 8 }}>{t("homeSavedTitle")}</div>
             <div className="stack" style={{ gap: 9 }}>
               {stands.map((stand) => {
                 const agg = aggregateStand(

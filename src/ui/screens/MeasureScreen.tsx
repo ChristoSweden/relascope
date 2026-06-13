@@ -11,13 +11,14 @@ import {
   stemVolumeM3,
 } from "../../domain/relascope";
 import { EdgeMarkerOverlay, useEdgeMarkers } from "../components/EdgeMarkers";
+import { newId } from "../../storage/store";
 
 const DEG = Math.PI / 180;
 
 type Step = "base" | "top" | "result" | "thick";
 
 export function MeasureScreen() {
-  const { settings, t } = useApp();
+  const { settings, saveMeasurement, t } = useApp();
   const navigate = useNavigate();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const { videoRef, start, stop, error, ready, frame } = useCamera();
@@ -31,12 +32,28 @@ export function MeasureScreen() {
   const [baseAngle, setBaseAngle] = useState<number | null>(null);
   const [heightM, setHeightM] = useState<number | null>(null);
   const [dbhCm, setDbhCm] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     start();
     return () => stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-save when height result is ready
+  useEffect(() => {
+    if (step === "result" && heightM !== null && !saved) {
+      saveMeasurement({
+        id: newId(),
+        createdAt: new Date().toISOString(),
+        heightM,
+        dbhCm: dbhCm ?? null,
+        woodVolumeM3: woodVolumeM3 ?? null,
+      });
+      setSaved(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, heightM, dbhCm, saved]);
 
   const pitch = active && pitchDeg !== null ? pitchDeg : 0;
 
@@ -88,6 +105,7 @@ export function MeasureScreen() {
     if (angle <= 0) return;
     setDbhCm(diameterFromAngleCm(angle, distanceM / Math.cos(pitch * DEG)));
     if (navigator.vibrate) navigator.vibrate(25);
+    setSaved(false); // re-save with thickness
     setStep("result");
   };
 
@@ -102,6 +120,7 @@ export function MeasureScreen() {
     setHeightM(null);
     setDbhCm(null);
     setErr(null);
+    setSaved(false);
     resetMarkers();
     setStep("base");
   };
@@ -128,6 +147,11 @@ export function MeasureScreen() {
             {heightM !== null ? heightM.toFixed(1) : "—"}
             <span className="result-unit">m {t("resultTall")}</span>
           </div>
+          {saved && (
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: "var(--acc)", marginTop: 10, textTransform: "uppercase" }}>
+              ✓ Saved
+            </div>
+          )}
         </div>
 
         {dbhCm !== null && (
@@ -147,23 +171,25 @@ export function MeasureScreen() {
 
         <div className="stack">
           {dbhCm === null && (
-            <button className="btn" onClick={() => { setErr(null); setStep("thick"); }}>
+            <button className="btn" onClick={() => { setErr(null); setSaved(false); setStep("thick"); }}>
               {t("addThickness")}
             </button>
           )}
           <button className="btn primary" onClick={startOver}>
             {t("measureAnother")}
           </button>
-          <a
-            className="btn ghost"
-            href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
-          >
-            ✉ {t("feedback")}
-          </a>
           <button className="btn ghost" onClick={() => navigate("/")}>
             {t("finishDone")}
           </button>
         </div>
+
+        {/* Feedback nudge */}
+        <a
+          href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+          style={{ display: "block", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 10.5, letterSpacing: "0.08em", color: "var(--muted)", textDecoration: "none", paddingTop: 4 }}
+        >
+          📬 {t("feedbackNudge")}
+        </a>
       </div>
     );
   }
@@ -190,7 +216,12 @@ export function MeasureScreen() {
       </div>
 
       <div className="sweep-hud">
-        <button className="btn small ghost" onClick={() => navigate("/")} aria-label={t("back")} style={{ backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.18)", color: "#fff" }}>
+        <button
+          className="btn small ghost"
+          onClick={() => navigate("/")}
+          aria-label={t("back")}
+          style={{ backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.18)", color: "#fff" }}
+        >
           ✕
         </button>
       </div>
@@ -202,12 +233,22 @@ export function MeasureScreen() {
         {err && <p className="inline-err">{err}</p>}
 
         {!active && needsPermission ? (
-          <>
-            <p className="step-hint">{t("iosSensorNote")}</p>
+          <div>
+            {/* Bullet-point trust signals for iOS sensor */}
+            <div style={{ background: "rgba(67,217,163,0.08)", border: "1px solid rgba(67,217,163,0.22)", borderRadius: 14, padding: "12px 14px", marginBottom: 12 }}>
+              {[t("iosSensorBullet1"), t("iosSensorBullet2")].map((line) => (
+                <div key={line} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 6 }}>
+                  <span style={{ color: "var(--acc)", flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 14, color: "#cfeede", lineHeight: 1.35 }}>{line}</span>
+                </div>
+              ))}
+            </div>
+            {/* Full transparency note — kept for e2e test assertions */}
+            <p className="step-hint" style={{ fontSize: 13, marginBottom: 14 }}>{t("iosSensorNote")}</p>
             <button className="btn primary big-cta" onClick={startMotion}>
               {t("mTurnOn")}
             </button>
-          </>
+          </div>
         ) : (
           <button className="btn primary big-cta" onClick={stepConfig.onTap}>
             {stepConfig.btn}
