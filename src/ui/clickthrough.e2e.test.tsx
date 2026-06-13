@@ -70,8 +70,9 @@ async function renderAt(path: string) {
 
 beforeEach(() => {
   localStorage.clear();
-  // Past the one-time onboarding so Home shows the launchpad.
+  // Past the one-time onboarding AND calibration gate so Home shows the launchpad.
   localStorage.setItem("relascope.onboarded.v1", "1");
+  localStorage.setItem("relascope.settings.v1", JSON.stringify({ calibrated: true }));
   objectUrls = 0;
 });
 afterEach(() => {
@@ -152,7 +153,7 @@ describe("automated click-through — non-sensor flows", () => {
       meanHeightM: 20,
       points: [],
     };
-    const backupJson = backupToJson([stand], DEFAULT_SETTINGS);
+    const backupJson = backupToJson([stand], { ...DEFAULT_SETTINGS, calibrated: true });
 
     // Restore asks for confirmation — accept it.
     const origConfirm = window.confirm;
@@ -175,6 +176,20 @@ describe("automated click-through — non-sensor flows", () => {
     expect(persisted.some((s: Stand) => s.name === "Återställt skifte")).toBe(true);
     await renderAt("/");
     expect(text()).toContain("Återställt skifte");
+  });
+
+  it("E. an uncalibrated app gates on calibration before any measuring", async () => {
+    // Override the calibrated seed: simulate a brand-new, uncalibrated install.
+    localStorage.setItem("relascope.settings.v1", JSON.stringify({ calibrated: false }));
+
+    // Home shows the calibration gate, not the measuring launchpad.
+    await renderAt("/");
+    expect(text()).toContain("Set up your gauge first");
+    expect(text()).not.toContain("Estimate my whole forest");
+
+    // Deep-linking straight to the measure tool is blocked (redirected away).
+    await renderAt("/measure");
+    expect(text()).not.toMatch(/Step 1 of 3/);
   });
 
   it("D. BeetleSense funnel surfaces render and link to beetlesense.ai", async () => {

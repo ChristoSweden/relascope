@@ -47,7 +47,11 @@ async function renderAt(path: string) {
   });
 }
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  // Measuring is gated behind calibration; this suite tests the post-setup flow.
+  localStorage.setItem("relascope.settings.v1", JSON.stringify({ calibrated: true }));
+});
 afterEach(() => {
   if (root) act(() => root!.unmount());
   root = null;

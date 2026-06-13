@@ -126,6 +126,12 @@ export function MeasureScreen() {
     setStep("base");
   };
 
+  // Calibration is required before any measuring (set up the gauge first).
+  if (!settings.calibrated) {
+    navigate("/calibrate");
+    return null;
+  }
+
   if (error === "camera-denied") {
     return (
       <div className="content stack" style={{ justifyContent: "center", minHeight: "70vh" }}>

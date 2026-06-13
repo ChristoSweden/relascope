@@ -59,7 +59,7 @@ function MeasurementRow({ m, onDelete }: { m: TreeMeasurement; onDelete: () => v
 }
 
 export function HomeScreen() {
-  const { stands, measurements, deleteMeasurement, upsertStand, t } = useApp();
+  const { stands, measurements, deleteMeasurement, upsertStand, settings, t } = useApp();
   const navigate = useNavigate();
   const [onboarded, setOnboarded] = useState(
     () => localStorage.getItem(ONBOARDED_KEY) === "1" || stands.length > 0,
@@ -99,7 +99,7 @@ export function HomeScreen() {
             <li>{t("welcomeNeed3")}</li>
           </ul>
         </div>
-        <button className="btn primary big-cta" onClick={() => dismissOnboarding(() => navigate("/measure"))}>
+        <button className="btn primary big-cta" onClick={() => dismissOnboarding(() => navigate("/calibrate"))}>
           {t("welcomeStart")}
         </button>
         <button className="btn ghost" onClick={() => dismissOnboarding()}>
@@ -107,6 +107,28 @@ export function HomeScreen() {
         </button>
         <p className="muted" style={{ fontFamily: "'Space Mono', monospace", fontSize: 9.5, letterSpacing: "0.1em", textAlign: "center", margin: "4px auto 0", maxWidth: "38ch", textTransform: "uppercase" }}>
           🔒 {t("privacyNote")}
+        </p>
+      </div>
+    );
+  }
+
+  // ---- Calibration gate: the gauge must be set up before any measuring ----
+  if (!settings.calibrated) {
+    return (
+      <div className="content stack" style={{ minHeight: "100dvh", justifyContent: "center" }}>
+        <div className="onboard">
+          <div className="onboard-emoji">🎯</div>
+          <h1>{t("calibGateTitle")}</h1>
+          <p>{t("calibGateBody")}</p>
+        </div>
+        <button className="btn primary big-cta" onClick={() => navigate("/calibrate")}>
+          {t("calibGateCta")}
+        </button>
+        <Link to="/tutorial" className="btn ghost">
+          {t("tutorial")}
+        </Link>
+        <p className="muted" style={{ fontFamily: "'Space Mono', monospace", fontSize: 9.5, letterSpacing: "0.1em", textAlign: "center", margin: "4px auto 0", maxWidth: "38ch", textTransform: "uppercase" }}>
+          {t("calibGateWhy")}
         </p>
       </div>
     );

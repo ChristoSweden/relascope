@@ -113,6 +113,13 @@ export function SweepScreen() {
     return null;
   }
 
+  // Calibration is required before counting — basal area depends on the
+  // camera's field of view, so an uncalibrated sweep would be biased.
+  if (!settings.calibrated) {
+    navigate("/calibrate");
+    return null;
+  }
+
   if (error === "camera-denied") {
     return (
       <div className="content stack">

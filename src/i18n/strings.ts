@@ -16,6 +16,11 @@ const en: Dict = {
   calibration: "Calibration",
   notCalibrated: "Not calibrated — using a default field of view. Calibrate for accurate counts.",
   calibrated: "Calibrated",
+  calibGateTitle: "Set up your gauge first",
+  calibGateBody:
+    "Relascope measures angles through your camera, so it needs your camera's field of view before it can give accurate numbers. This one-time setup takes about 30 seconds.",
+  calibGateCta: "Calibrate my camera",
+  calibGateWhy: "🎯 Required once · keeps every reading accurate",
   tutorial: "How it works",
   points: "Points",
   noPoints: "No sample points yet.",
@@ -246,6 +251,11 @@ const sv: Dict = {
   calibration: "Kalibrering",
   notCalibrated: "Inte kalibrerad — använder ett standardvärde. Kalibrera för noggranna räkningar.",
   calibrated: "Kalibrerad",
+  calibGateTitle: "Ställ in mätaren först",
+  calibGateBody:
+    "Relaskop mäter vinklar genom kameran, så den behöver kamerans synfält innan den kan ge noggranna siffror. Den här engångsinställningen tar cirka 30 sekunder.",
+  calibGateCta: "Kalibrera min kamera",
+  calibGateWhy: "🎯 Krävs en gång · håller varje mätning noggrann",
   tutorial: "Så fungerar det",
   points: "Punkter",
   noPoints: "Inga provpunkter ännu.",
