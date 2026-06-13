@@ -12,8 +12,8 @@ import {
   prependMeasurement,
   deleteMeasurementById,
 } from "../storage/store";
-import { DEFAULT_SETTINGS, type Settings, type Stand, type TreeMeasurement } from "../storage/types";
-import { detectLanguage, translate } from "../i18n/strings";
+import { type Settings, type Stand, type TreeMeasurement } from "../storage/types";
+import { translate } from "../i18n/strings";
 
 interface AppState {
   stands: Stand[];
@@ -34,13 +34,8 @@ const AppContext = createContext<AppState | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [stands, setStands] = useState<Stand[]>(() => loadStands());
   const [measurements, setMeasurements] = useState<TreeMeasurement[]>(() => loadMeasurements());
-  const [settings, setSettings] = useState<Settings>(() => {
-    const loaded = loadSettings();
-    if (loaded === DEFAULT_SETTINGS || !localStorage.getItem("relascope.settings.v1")) {
-      return { ...loaded, language: detectLanguage() };
-    }
-    return loaded;
-  });
+  // Default to English; Swedish stays available via Settings → Language.
+  const [settings, setSettings] = useState<Settings>(() => loadSettings());
 
   useEffect(() => saveStands(stands), [stands]);
   useEffect(() => saveSettings(settings), [settings]);
