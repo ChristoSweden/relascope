@@ -66,6 +66,9 @@ beforeEach(() => {
   container = null;
   localStorage.clear();
   localStorage.setItem("relascope.stands.v1", JSON.stringify([STAND]));
+  // The home launchpad is gated behind calibration; these screens assume a
+  // set-up gauge.
+  localStorage.setItem("relascope.settings.v1", JSON.stringify({ calibrated: true }));
 });
 
 describe("screen render smoke tests", () => {

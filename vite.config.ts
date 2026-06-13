@@ -13,12 +13,12 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg", "apple-touch-icon.png"],
       manifest: {
-        name: "Digital Relascope",
+        name: "BeetleSense Relascope",
         short_name: "Relascope",
         description:
-          "Turn your phone into a Bitterlich angle-count gauge. Measure basal area per hectare offline.",
-        theme_color: "#14532d",
-        background_color: "#0b1f12",
+          "The free BeetleSense field tool: turn your phone into a Bitterlich angle-count gauge and measure basal area per hectare offline. Part of the BeetleSense forest-monitoring platform.",
+        theme_color: "#050f0a",
+        background_color: "#050f0a",
         display: "standalone",
         orientation: "portrait",
         start_url: "./",

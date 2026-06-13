@@ -6,7 +6,7 @@ import type { Language } from "../storage/types";
 type Dict = Record<string, string>;
 
 const en: Dict = {
-  appName: "Digital Relascope",
+  appName: "BeetleSense Relascope",
   tagline: "Phone-based angle-count for forest owners",
   stands: "Stands",
   newStand: "New stand",
@@ -16,6 +16,11 @@ const en: Dict = {
   calibration: "Calibration",
   notCalibrated: "Not calibrated — using a default field of view. Calibrate for accurate counts.",
   calibrated: "Calibrated",
+  calibGateTitle: "Set up your gauge first",
+  calibGateBody:
+    "Relascope measures angles through your camera, so it needs your camera's field of view before it can give accurate numbers. This one-time setup takes about 30 seconds.",
+  calibGateCta: "Calibrate my camera",
+  calibGateWhy: "🎯 Required once · keeps every reading accurate",
   tutorial: "How it works",
   points: "Points",
   noPoints: "No sample points yet.",
@@ -227,10 +232,16 @@ const en: Dict = {
   iosSensorBullet1: "Used only while you measure — off when done",
   iosSensorBullet2: "Reads angle to the treetop, not your location",
   setHeightForVolume: "Tap to set height for volume",
+  // BeetleSense funnel
+  bsHookTitle: "This is one tree.",
+  bsHookBody:
+    "BeetleSense watches your whole forest from space — bark-beetle early warning before damage spreads.",
+  bsHookCta: "Explore BeetleSense",
+  bsPartOf: "Part of BeetleSense · beetlesense.ai",
 };
 
 const sv: Dict = {
-  appName: "Digital Relaskop",
+  appName: "BeetleSense Relaskop",
   tagline: "Mobilbaserad vinkelräkning för skogsägare",
   stands: "Bestånd",
   newStand: "Nytt bestånd",
@@ -240,6 +251,11 @@ const sv: Dict = {
   calibration: "Kalibrering",
   notCalibrated: "Inte kalibrerad — använder ett standardvärde. Kalibrera för noggranna räkningar.",
   calibrated: "Kalibrerad",
+  calibGateTitle: "Ställ in mätaren först",
+  calibGateBody:
+    "Relaskop mäter vinklar genom kameran, så den behöver kamerans synfält innan den kan ge noggranna siffror. Den här engångsinställningen tar cirka 30 sekunder.",
+  calibGateCta: "Kalibrera min kamera",
+  calibGateWhy: "🎯 Krävs en gång · håller varje mätning noggrann",
   tutorial: "Så fungerar det",
   points: "Punkter",
   noPoints: "Inga provpunkter ännu.",
@@ -450,6 +466,12 @@ const sv: Dict = {
   iosSensorBullet1: "Används bara medan du mäter — stängs av när du är klar",
   iosSensorBullet2: "Läser vinkel till toppen, inte din position",
   setHeightForVolume: "Tryck för att ange höjd för volym",
+  // BeetleSense funnel
+  bsHookTitle: "Det här är ett träd.",
+  bsHookBody:
+    "BeetleSense bevakar hela din skog från rymden — tidig varning för granbarkborre innan skadan sprids.",
+  bsHookCta: "Utforska BeetleSense",
+  bsPartOf: "En del av BeetleSense · beetlesense.ai",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };

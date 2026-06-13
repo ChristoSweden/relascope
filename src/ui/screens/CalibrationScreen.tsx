@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../AppContext";
 import { useCamera } from "../hooks";
 import { coverDisplayScale, hfovFromCalibration } from "../../domain/relascope";
@@ -11,6 +11,7 @@ import { TopBar } from "../components/TopBar";
 // back to native frame pixels so the result transfers exactly to the sweep view.
 export function CalibrationScreen() {
   const { settings, updateSettings, t } = useApp();
+  const navigate = useNavigate();
   const { videoRef, start, stop, error, ready, frame } = useCamera();
   const stageRef = useRef<HTMLDivElement | null>(null);
 
@@ -120,7 +121,10 @@ export function CalibrationScreen() {
             <div className="banner ok">
               {t("calibSaved")} HFOV ≈ {settings.hfovDeg}°
             </div>
-            <Link to="/verify" className="btn">
+            <button className="btn primary" onClick={() => navigate("/")}>
+              {t("done")}
+            </button>
+            <Link to="/verify" className="btn ghost">
               {t("verifyCalibration")}
             </Link>
           </>
