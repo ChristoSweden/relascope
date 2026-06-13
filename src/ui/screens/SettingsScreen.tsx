@@ -207,7 +207,7 @@ export function SettingsScreen() {
           </p>
           <a
             className="btn"
-            href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+            href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("BeetleSense Relascope feedback")}`}
           >
             ✉ {t("feedback")}
           </a>

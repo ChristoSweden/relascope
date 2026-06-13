@@ -497,6 +497,67 @@ textarea { min-height: 88px; }
   z-index: 1;
 }
 
+/* ---- BeetleSense funnel hook (free Relascope → full platform) ---- */
+.bs-hook {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid rgba(67,217,163,0.28);
+  background: linear-gradient(180deg, rgba(67,217,163,0.08), rgba(67,217,163,0.02));
+  border-radius: 18px;
+  padding: 16px 18px;
+  transition: transform 0.12s, border-color 0.12s;
+}
+
+.bs-hook:active { transform: scale(0.985); }
+
+.bs-hook-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.bs-hook-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acc);
+  box-shadow: 0 0 8px var(--acc);
+  flex: none;
+}
+
+.bs-hook-brand {
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+.bs-hook-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.bs-hook-body {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
+.bs-hook-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--acc);
+}
+
 /* ---- Home CTA cards ---- */
 .home-cta {
   display: flex;

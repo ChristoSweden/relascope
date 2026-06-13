@@ -11,6 +11,7 @@ import {
   stemVolumeM3,
 } from "../../domain/relascope";
 import { EdgeMarkerOverlay, useEdgeMarkers } from "../components/EdgeMarkers";
+import { BeetleSenseHook } from "../components/BeetleSenseHook";
 import { newId } from "../../storage/store";
 
 const DEG = Math.PI / 180;
@@ -183,9 +184,12 @@ export function MeasureScreen() {
           </button>
         </div>
 
+        {/* Funnel into the full BeetleSense platform at the high-intent moment */}
+        <BeetleSenseHook />
+
         {/* Feedback nudge */}
         <a
-          href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("Digital Relascope feedback")}`}
+          href={`mailto:christo@beetlesense.com?subject=${encodeURIComponent("BeetleSense Relascope feedback")}`}
           style={{ display: "block", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 10.5, letterSpacing: "0.08em", color: "var(--muted)", textDecoration: "none", paddingTop: 4 }}
         >
           📬 {t("feedbackNudge")}

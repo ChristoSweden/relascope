@@ -6,7 +6,7 @@ import type { Language } from "../storage/types";
 type Dict = Record<string, string>;
 
 const en: Dict = {
-  appName: "Digital Relascope",
+  appName: "BeetleSense Relascope",
   tagline: "Phone-based angle-count for forest owners",
   stands: "Stands",
   newStand: "New stand",
@@ -227,10 +227,16 @@ const en: Dict = {
   iosSensorBullet1: "Used only while you measure — off when done",
   iosSensorBullet2: "Reads angle to the treetop, not your location",
   setHeightForVolume: "Tap to set height for volume",
+  // BeetleSense funnel
+  bsHookTitle: "This is one tree.",
+  bsHookBody:
+    "BeetleSense watches your whole forest from space — bark-beetle early warning before damage spreads.",
+  bsHookCta: "Explore BeetleSense",
+  bsPartOf: "Part of BeetleSense · beetlesense.ai",
 };
 
 const sv: Dict = {
-  appName: "Digital Relaskop",
+  appName: "BeetleSense Relaskop",
   tagline: "Mobilbaserad vinkelräkning för skogsägare",
   stands: "Bestånd",
   newStand: "Nytt bestånd",
@@ -450,6 +456,12 @@ const sv: Dict = {
   iosSensorBullet1: "Används bara medan du mäter — stängs av när du är klar",
   iosSensorBullet2: "Läser vinkel till toppen, inte din position",
   setHeightForVolume: "Tryck för att ange höjd för volym",
+  // BeetleSense funnel
+  bsHookTitle: "Det här är ett träd.",
+  bsHookBody:
+    "BeetleSense bevakar hela din skog från rymden — tidig varning för granbarkborre innan skadan sprids.",
+  bsHookCta: "Utforska BeetleSense",
+  bsPartOf: "En del av BeetleSense · beetlesense.ai",
 };
 
 const dicts: Record<Language, Dict> = { en, sv };
